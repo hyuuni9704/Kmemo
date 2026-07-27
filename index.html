@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>메모앱</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- 상단: 앱 이름 (클릭하여 변경 가능) -->
+  <header class="app-header">
+    <button class="app-title" id="appTitle" type="button" aria-label="앱 이름 변경"></button>
+  </header>
+
+  <main>
+    <!-- 메인화면: 공통/개인/사업자/추가 사업체 버튼 -->
+    <section class="view" id="view-main">
+      <section class="common-section">
+        <div class="category-item category-item--common">
+          <button class="btn-common" id="commonBtn" type="button"></button>
+          <button class="btn-edit" id="commonEditBtn" type="button" aria-label="공통 이름 변경">✏</button>
+        </div>
+      </section>
+
+      <section class="category-section" id="categoryButtons"></section>
+
+      <button class="btn-add-business" id="addBusinessBtn" type="button">+ 사업체 추가</button>
+
+      <!-- 미니 달력: 메모가 있는 날짜에 색 점 표시 (전체 카테고리 통합) -->
+      <section class="mini-calendar" id="miniCalendar">
+        <div class="calendar-header">
+          <button class="calendar-nav-btn" id="calendarPrevBtn" type="button" aria-label="이전 달">◀</button>
+          <span class="calendar-label" id="calendarLabel"></span>
+          <button class="calendar-nav-btn" id="calendarNextBtn" type="button" aria-label="다음 달">▶</button>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </section>
+    </section>
+
+    <!-- 카테고리별 대시보드 화면: 달력 + 오늘의 메모 + 이번 달 할 일 + 사업자 필수 항목 -->
+    <section class="view" id="view-list" hidden>
+      <div class="view-header">
+        <button class="btn-back" id="listBackBtn" type="button" aria-label="뒤로가기">←</button>
+        <h2 class="view-title" id="listTitle"></h2>
+      </div>
+
+      <section class="mini-calendar" id="dashboardCalendar">
+        <div class="calendar-header">
+          <button class="calendar-nav-btn" id="dashCalendarPrevBtn" type="button" aria-label="이전 달">◀</button>
+          <span class="calendar-label" id="dashCalendarLabel"></span>
+          <button class="calendar-nav-btn" id="dashCalendarNextBtn" type="button" aria-label="다음 달">▶</button>
+        </div>
+        <div class="calendar-grid" id="dashCalendarGrid"></div>
+      </section>
+
+      <section class="dashboard-card">
+        <div class="dashboard-card__header">
+          <h3 class="dashboard-card__title" id="dayMemoTitle">오늘의 메모</h3>
+          <button class="link-btn" id="dayMemoSeeAllBtn" type="button">전체보기 ></button>
+        </div>
+        <div class="dashboard-card__list" id="dayMemoList"></div>
+        <button class="btn-card-add" id="dayMemoAddBtn" type="button">+ 메모 추가</button>
+      </section>
+
+      <section class="dashboard-card">
+        <div class="dashboard-card__header">
+          <h3 class="dashboard-card__title">이번 달 할 일</h3>
+          <button class="link-btn" id="monthlyTodoSeeAllBtn" type="button">전체보기 ></button>
+        </div>
+        <div class="dashboard-card__list" id="monthlyTodoList"></div>
+        <button class="btn-card-add" id="monthlyTodoAddBtn" type="button">+ 할 일 추가</button>
+      </section>
+
+      <section class="dashboard-card">
+        <div class="dashboard-card__header">
+          <h3 class="dashboard-card__title">사업자 필수 항목</h3>
+          <button class="link-btn" id="businessSeeAllBtn" type="button">전체보기 ></button>
+        </div>
+        <div class="dashboard-card__list" id="businessRequiredList"></div>
+        <button class="btn-card-add" id="businessRequiredAddBtn" type="button">+ 필수 항목 추가</button>
+      </section>
+    </section>
+
+    <!-- 전체보기 화면 (구분별 전체 목록) -->
+    <section class="view" id="view-scopelist" hidden>
+      <div class="view-header">
+        <button class="btn-back" id="scopeListBackBtn" type="button" aria-label="뒤로가기">←</button>
+        <h2 class="view-title" id="scopeListTitle"></h2>
+      </div>
+
+      <div class="memo-list" id="scopeListContainer"></div>
+    </section>
+
+    <!-- 메모 작성/수정 화면 -->
+    <section class="view" id="view-form" hidden>
+      <div class="view-header">
+        <button class="btn-back" id="formCancelBtn" type="button" aria-label="취소">←</button>
+        <h2 class="view-title" id="formTitle"></h2>
+      </div>
+
+      <form id="memoFormEl">
+        <div class="memo-date-field">
+          <label for="memoDateInput">날짜</label>
+          <input class="memo-date-input" id="memoDateInput" type="date">
+        </div>
+
+        <div class="category-checkboxes" id="categoryCheckboxes"></div>
+
+        <div class="scope-radio-group" id="scopeRadioGroup">
+          <label class="scope-radio">
+            <input type="radio" name="memoScope" value="general" checked>
+            <span>일반 메모</span>
+          </label>
+          <label class="scope-radio">
+            <input type="radio" name="memoScope" value="calendar-month">
+            <span>이번 달 할 일</span>
+          </label>
+          <label class="scope-radio">
+            <input type="radio" name="memoScope" value="business-required">
+            <span>사업자 필수 항목</span>
+          </label>
+        </div>
+
+        <div class="memo-color-field">
+          <label for="memoColorInput">달력 표시 색상</label>
+          <input class="memo-color-input" id="memoColorInput" type="color" value="#4a90e2">
+        </div>
+
+        <input class="memo-title-input" id="memoTitleInput" type="text" placeholder="제목">
+        <textarea class="memo-content-input" id="memoContentInput" placeholder="새로운 메모 작성을 위해 입력하세요" rows="10"></textarea>
+
+        <div class="status-field" id="statusField" hidden>
+          <label class="status-checkbox">
+            <input type="checkbox" id="memoDoneInput">
+            <span>완료</span>
+          </label>
+          <label class="status-toggle">
+            <span>계속 지켜보기</span>
+            <input type="checkbox" id="memoWatchingInput">
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-save-memo" type="submit">저장</button>
+          <button class="btn-delete-memo" id="deleteMemoBtn" type="button" hidden>삭제</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="js/main.js" defer></script>
+</body>
+</html>

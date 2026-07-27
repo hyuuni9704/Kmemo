@@ -1,0 +1,130 @@
+메모앱 화면 기획서 (이미지 생성 프롬프트 포함)
+
+이 문서는 CLAUDE.md에 정의된 기능을 기준으로, 앱의 각 화면을 이미지 생성 AI(미드저니, DALL·E, Stable Diffusion 등)로 목업 이미지를 뽑아볼 수 있도록 화면별 설명과 프롬프트를 정리한 문서입니다.
+
+====================================================================
+1. 메인화면 (진입 화면)
+====================================================================
+
+[화면 설명]
+- 상단에 공통 큰 버튼 1개
+- 그 아래 개인 / 사업자 / 추가 사업체 버튼 (사업체가 여러 개면 계속 추가되는 구조)
+- 각 버튼 이름은 사용자가 직접 수정 가능
+- 심플하고 깔끔한 톤
+
+[이미지 생성 프롬프트]
+Mobile app UI mockup, main home screen of a note-taking app,
+top area has one large prominent button labeled "공통(Common)",
+below it a row of smaller buttons labeled "개인(Personal)", "사업자(Business)",
+and a "+" button to add more business categories,
+clean minimal flat design, soft rounded corners, generous white space,
+light color palette with one accent color, sans-serif Korean typography,
+UI design reference, Figma style mockup, no photorealistic elements
+
+
+====================================================================
+2. 캘린더 화면
+====================================================================
+
+[화면 설명]
+- 상단: 월간 달력
+- 달력 바로 아래
+  왼쪽 위: 선택한 날짜(그날)의 메모
+  왼쪽 아래: 이번 달 전체 할 일(월간 할 일) 메모
+  오른쪽: 사업자 전용 "반드시 해야 하는 일" 목록
+- 완료된 항목은 불투명 회색 처리, "지켜봐야 하는" 항목은 두꺼운 테두리 + 우측 상단에 작은 라벨 표시
+
+[이미지 생성 프롬프트]
+Mobile app UI mockup, calendar screen of a note-taking app,
+top half shows a monthly calendar grid,
+bottom half split into three panels:
+top-left panel labeled "오늘의 메모(Today's Notes)",
+bottom-left panel labeled "이번 달 할 일(Monthly To-dos)",
+right panel labeled "사업자 필수 항목(Business Must-do)" with a checklist,
+some checklist items shown as grayed-out with a checkmark to indicate completed tasks,
+one item has a thicker card border with a small tag in the top-right corner reading "관찰중",
+clean flat UI design, soft rounded cards, light color palette, sans-serif Korean typography,
+Figma style mockup, no photorealistic elements
+
+
+====================================================================
+3. 메모 작성/수정 화면
+====================================================================
+
+[화면 설명]
+- 상단에 카테고리 체크박스 4종: 공통 / 개인 / 사업체 / 추가 사업체 (다중 선택 가능)
+- 제목, 본문 입력란
+- 하단에 "주시 주기" 설정 영역
+  옵션 A: 날짜 여러 개 직접 선택
+  옵션 B: N일 주기 반복 선택
+- 완료 체크박스 및 "계속 지켜보기" 토글
+
+[이미지 생성 프롬프트]
+Mobile app UI mockup, note creation/edit screen,
+top row shows four category checkboxes labeled "공통", "개인", "사업체", "추가사업체" (multi-select style, some checked),
+below that a title input field and a large text content area,
+lower section labeled "주시 주기 설정" with two selectable options:
+one option "날짜 직접 지정" showing a small multi-date picker with several dates selected,
+another option "N일마다 반복" showing a number stepper input,
+a toggle switch labeled "계속 지켜보기" near the bottom,
+clean flat minimal UI design, soft rounded input fields, light color palette,
+sans-serif Korean typography, Figma style mockup, no photorealistic elements
+
+
+====================================================================
+4. 카테고리별 필터 화면 (개인 / 사업자 / 추가 사업체 진입 시)
+====================================================================
+
+[화면 설명]
+- 메인화면에서 특정 버튼(예: 사업자)을 눌렀을 때 진입하는 화면
+- 해당 카테고리에 속한 메모만 리스트로 표시
+- 리스트 상단에 검색창 배치
+
+[이미지 생성 프롬프트]
+Mobile app UI mockup, filtered note list screen for "사업자(Business)" category,
+top has a search bar with a magnifying glass icon and placeholder text "메모 검색",
+below it a vertical list of note cards, each card shows a title, short preview text, and a small category tag,
+some cards have a checkbox on the left, some checked and shown in muted gray,
+clean flat minimal UI design, soft rounded cards, light color palette,
+sans-serif Korean typography, Figma style mockup, no photorealistic elements
+
+
+====================================================================
+5. 검색 화면
+====================================================================
+
+[화면 설명]
+- 메모 내용을 기준으로 검색 가능
+- 검색 결과에 검색어가 포함된 부분을 하이라이트
+
+[이미지 생성 프롬프트]
+Mobile app UI mockup, search screen for a note-taking app,
+top search bar with active text input,
+below it a list of search result cards, each showing a note title and a content snippet
+with the matched keyword highlighted in a light accent color background,
+clean flat minimal UI design, soft rounded cards, light color palette,
+sans-serif Korean typography, Figma style mockup, no photorealistic elements
+
+
+====================================================================
+6. 다크모드 화면 (선택)
+====================================================================
+
+[화면 설명]
+- 캘린더 화면의 다크모드 버전
+- 배경은 어두운 톤, 카드 요소는 약간 밝은 회색
+
+[이미지 생성 프롬프트]
+Mobile app UI mockup, dark mode version of the calendar screen for a note-taking app,
+dark charcoal background, cards in slightly lighter dark gray with subtle borders,
+same layout as light mode: monthly calendar on top, three panels below
+("오늘의 메모", "이번 달 할 일", "사업자 필수 항목"),
+completed checklist items shown dimmed/grayed further, accent color pops against dark background,
+clean flat minimal UI design, sans-serif Korean typography, Figma style mockup, no photorealistic elements
+
+
+====================================================================
+참고
+====================================================================
+- 프롬프트 내 한글 텍스트는 이미지 생성 모델에 따라 정확히 렌더링되지 않을 수 있습니다. 텍스트 정확도가 중요하다면 라벨 부분만 영문으로 바꾸거나, 이미지 생성 후 별도로 텍스트를 얹는 방식을 추천합니다.
+- 색상 값(메인 컬러 등)이 정해지면 각 프롬프트의 "light color palette" 부분에 구체적인 HEX 코드나 색상명을 추가해서 더 정확한 목업을 얻을 수 있습니다.

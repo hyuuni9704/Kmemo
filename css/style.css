@@ -1,0 +1,667 @@
+/* ========================================
+   메모앱 - 기본 스타일시트
+   컬러 시스템(CSS 변수)은 디자인 기획이
+   확정되지 않아 기본 팔레트로 우선 정의함.
+   변수명은 이후에도 유지하고 값만 조정 예정.
+   ======================================== */
+
+:root {
+  /* Brand Colors (placeholder) */
+  --color-primary: #4a90e2;
+  --color-primary-dark: #3a7bc8;
+
+  /* Light Mode (기본) */
+  --color-bg: #f7f8fa;
+  --color-surface: #ffffff;
+  --color-text: #1f2937;
+  --color-text-secondary: #6b7280;
+  --color-border: #e5e7eb;
+
+  /* 공통 스페이싱 / 라운드 */
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+
+  --font-family: 'Pretendard', 'Malgun Gothic', -apple-system, sans-serif;
+}
+
+/* ===== 초기화 ===== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ===== 상단 앱 이름 ===== */
+.app-header {
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-lg) var(--spacing-md) var(--spacing-sm);
+}
+
+.app-title {
+  background: none;
+  border: none;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+}
+
+.app-title:hover,
+.app-title:focus-visible {
+  background-color: var(--color-surface);
+}
+
+/* ===== 메인화면 레이아웃 ===== */
+.main-screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--spacing-md);
+}
+
+/* ===== 카테고리 버튼 공통 아이템(선택 버튼 + 수정 버튼) ===== */
+.category-item {
+  display: flex;
+  align-items: stretch;
+  gap: var(--spacing-sm);
+}
+
+.btn-common,
+.btn-category {
+  flex: 1;
+  min-height: 48px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+/* 공통 버튼: 상단에 크게 강조 */
+.btn-common {
+  min-height: 64px;
+  font-size: 20px;
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.btn-common.is-active {
+  background-color: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+.btn-category.is-active {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+/* 이름 변경(연필) 버튼 */
+.btn-edit {
+  min-width: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 16px;
+}
+
+.btn-edit:hover,
+.btn-edit:focus-visible {
+  color: var(--color-text);
+  border-color: var(--color-primary);
+}
+
+/* 개인 / 사업자 / 추가 사업체 버튼 영역 */
+.category-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+/* 사업체 추가 버튼 */
+.btn-add-business {
+  min-height: 44px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.btn-add-business:hover,
+.btn-add-business:focus-visible {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* ===== 화면 공통 레이아웃 ===== */
+main {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--spacing-md);
+}
+
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.view[hidden] {
+  display: none;
+}
+
+.view-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.btn-back {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: 18px;
+}
+
+.view-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* ===== 메모 목록 화면 ===== */
+.memo-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.empty-message {
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: var(--spacing-lg) 0;
+}
+
+.memo-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.memo-card__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.memo-card__content {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+}
+
+.memo-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.memo-tag {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+  background-color: #eaf2fc;
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+.memo-card__actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.btn-memo-edit,
+.btn-memo-delete {
+  min-height: 36px;
+  padding: 0 var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.btn-memo-edit:hover,
+.btn-memo-edit:focus-visible {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.btn-memo-delete:hover,
+.btn-memo-delete:focus-visible {
+  color: #e11d48;
+  border-color: #e11d48;
+}
+
+
+/* ===== 메모 작성/수정 화면 ===== */
+#memoFormEl {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.category-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.category-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 14px;
+  background-color: var(--color-surface);
+}
+
+.memo-title-input,
+.memo-content-input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-family: inherit;
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.memo-title-input {
+  font-size: 16px;
+  font-weight: 700;
+  min-height: 44px;
+}
+
+.memo-content-input {
+  font-size: 14px;
+  resize: vertical;
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.btn-save-memo {
+  flex: 1;
+  min-height: 48px;
+  border: none;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.btn-save-memo:hover,
+.btn-save-memo:focus-visible {
+  background-color: var(--color-primary-dark);
+}
+
+.btn-delete-memo {
+  min-height: 48px;
+  padding: 0 var(--spacing-md);
+  border: 1px solid #e11d48;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  color: #e11d48;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* ===== 메모 색상 선택 ===== */
+.memo-color-field {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.memo-color-input {
+  width: 44px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: none;
+}
+
+/* ===== 메인화면 미니 달력 ===== */
+.mini-calendar {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.calendar-nav-btn {
+  min-width: 32px;
+  min-height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.calendar-nav-btn:hover,
+.calendar-nav-btn:focus-visible {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.calendar-label {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar-weekday {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  padding-bottom: 4px;
+}
+
+.calendar-day {
+  min-height: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  padding-top: 4px;
+  border-radius: 8px;
+}
+
+.calendar-day--empty {
+  visibility: hidden;
+}
+
+.calendar-day__num {
+  font-size: 12px;
+  color: var(--color-text);
+}
+
+.calendar-day__dots {
+  display: flex;
+  gap: 2px;
+}
+
+.calendar-day__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* 대시보드 달력의 클릭 가능한 날짜 셀 (button) */
+.calendar-day--clickable {
+  border: 1px solid transparent;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.calendar-day--clickable:hover,
+.calendar-day--clickable:focus-visible {
+  border-color: var(--color-primary);
+}
+
+.calendar-day--today {
+  border: 1px solid #e11d48;
+}
+
+.calendar-day--today .calendar-day__num {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.calendar-day--selected {
+  background-color: var(--color-primary);
+}
+
+.calendar-day--selected .calendar-day__num {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* ===== 카테고리 대시보드 카드 (오늘의 메모 / 이번 달 할 일 / 사업자 필수 항목) ===== */
+.dashboard-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.dashboard-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dashboard-card__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.link-btn {
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.link-btn:hover,
+.link-btn:focus-visible {
+  color: var(--color-primary);
+}
+
+.dashboard-card__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dashboard-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) 4px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.dashboard-row:hover {
+  background-color: var(--color-bg);
+}
+
+.dashboard-row__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dashboard-row__checkbox {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.dashboard-row__text {
+  flex: 1;
+  font-size: 14px;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-row__meta {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+/* 완료: 배경/텍스트를 불투명한 회색으로 처리 */
+.dashboard-row--done {
+  background-color: #e5e7eb;
+}
+
+.dashboard-row--done .dashboard-row__text,
+.dashboard-row--done .dashboard-row__meta {
+  color: #9ca3af;
+}
+
+/* 관찰중: 테두리 두껍게 + 우측 상단 작은 라벨 */
+.dashboard-row--watching {
+  border: 2px solid var(--color-primary);
+  padding: calc(var(--spacing-sm) - 1px) 3px;
+}
+
+.watching-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background-color: #eaf2fc;
+  border-radius: 999px;
+  padding: 1px 8px;
+  flex-shrink: 0;
+}
+
+.btn-card-add {
+  min-height: 40px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.btn-card-add:hover,
+.btn-card-add:focus-visible {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* ===== 메모 작성 화면: 날짜 / 구분 / 완료 상태 ===== */
+.memo-date-field {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.memo-date-input {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+}
+
+.scope-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.scope-radio {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  background-color: var(--color-surface);
+}
+
+.status-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.status-checkbox,
+.status-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 14px;
+}
