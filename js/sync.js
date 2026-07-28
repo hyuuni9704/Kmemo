@@ -15,14 +15,25 @@ function getSupabaseClient() {
 }
 
 // ===== 세션(로그인 상태) =====
+// PIN 방식이던 예전 버전의 세션({userId, pin})이 남아있으면 username/password가 없어
+// 동기화가 계속 조용히 실패하므로, 형식이 맞지 않는 세션은 무효 처리하고 재로그인을 요구함
 function loadSession() {
   const raw = localStorage.getItem(SESSION_KEY);
   if (!raw) return null;
+
+  let session;
   try {
-    return JSON.parse(raw);
+    session = JSON.parse(raw);
   } catch {
     return null;
   }
+
+  if (!session || !session.username || !session.password) {
+    clearSession();
+    return null;
+  }
+
+  return session;
 }
 
 function saveSession(session) {

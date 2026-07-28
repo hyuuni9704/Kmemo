@@ -814,7 +814,16 @@ async function handleLoginSubmit() {
     return;
   }
 
-  startMainApp();
+  // 새로 로그인하는 경우, 이 기기에는 아직 로컬 데이터가 없을 수 있으므로
+  // 화면을 그리기 전에 서버 데이터를 먼저 받아와 병합해야 다른 기기의 메모가 바로 보임
+  const submitBtn = document.getElementById('loginSubmitBtn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = '동기화 중...';
+
+  await startMainAppAfterLogin();
+
+  submitBtn.disabled = false;
+  submitBtn.textContent = '확인';
 }
 
 function bindLoginView() {
@@ -860,10 +869,19 @@ async function handleManualSyncClick() {
 }
 
 // ===== 앱 진입 =====
+// 기존 세션으로 재진입: 로컬 데이터로 즉시 화면을 그리고(오프라인 우선), 동기화는 백그라운드로 진행
 function startMainApp() {
   bindLogoutButton();
   initMainApp();
   syncOnLoad();
+}
+
+// 방금 로그인/등록한 경우: 이 기기에 로컬 데이터가 없을 수 있으므로
+// 서버 동기화가 끝난 뒤에 화면을 그려서 다른 기기의 메모가 처음부터 보이게 함
+async function startMainAppAfterLogin() {
+  bindLogoutButton();
+  await syncOnLoad();
+  initMainApp();
 }
 
 function initMainApp() {
