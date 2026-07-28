@@ -14,12 +14,13 @@
   </header>
 
   <main>
-    <!-- 로그인 화면: 인증번호(PIN) 입력, 기기 간 동기화용 -->
+    <!-- 로그인 화면: 아이디+비밀번호 입력, 기기 간 동기화용 -->
     <section class="view" id="view-login">
       <div class="login-box">
         <h1 class="login-title">Kmemo</h1>
-        <p class="login-desc">4자리 인증번호를 입력하세요.<br>처음이라면 자동으로 등록됩니다.</p>
-        <input class="login-pin-input" id="loginPinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" autocomplete="off">
+        <p class="login-desc">아이디와 비밀번호를 입력하세요.<br>처음 사용하는 아이디라면 자동으로 등록됩니다.</p>
+        <input class="login-text-input" id="loginUsernameInput" type="text" placeholder="아이디" autocomplete="username">
+        <input class="login-text-input" id="loginPasswordInput" type="password" placeholder="비밀번호(4자 이상)" autocomplete="current-password">
         <button class="btn-login" id="loginSubmitBtn" type="button">확인</button>
         <p class="login-error" id="loginErrorMsg" hidden></p>
       </div>
@@ -48,7 +49,7 @@
         <div class="calendar-grid" id="calendarGrid"></div>
       </section>
 
-      <!-- 같은 계정(PIN)으로 로그인된 다른 기기와 수동 동기화 -->
+      <!-- 같은 아이디/비밀번호로 로그인된 다른 기기와 수동 동기화 -->
       <button class="btn-sync-update" id="updateSyncBtn" type="button">⟳ 업데이트</button>
     </section>
 

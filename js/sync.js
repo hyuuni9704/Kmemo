@@ -1,4 +1,4 @@
-// 로그인(PIN 인증) 및 기기 간 메모 동기화
+// 로그인(아이디+비밀번호 인증) 및 기기 간 메모 동기화
 
 const SESSION_KEY = 'kmemo_session';
 
@@ -33,16 +33,19 @@ function clearSession() {
   localStorage.removeItem(SESSION_KEY);
 }
 
-// ===== PIN 로그인/최초 등록 =====
+// ===== 아이디+비밀번호 로그인/최초 등록 =====
 // 성공 시 세션을 저장하고 반환, 실패 시 예외를 던짐
-async function loginWithPin(pin) {
+async function loginWithCredentials(username, password) {
   const client = getSupabaseClient();
   if (!client) throw new Error('OFFLINE_OR_NOT_CONFIGURED');
 
-  const { data, error } = await client.rpc('auth_login', { p_pin: pin });
+  const { data, error } = await client.rpc('auth_login', {
+    p_username: username,
+    p_password: password
+  });
   if (error) throw error;
 
-  const session = { userId: data, pin };
+  const session = { userId: data, username, password };
   saveSession(session);
   return session;
 }
@@ -58,8 +61,8 @@ async function pullRemoteMemos(session) {
   if (!client) return null;
 
   const { data, error } = await client.rpc('get_memos', {
-    p_user_id: session.userId,
-    p_pin: session.pin
+    p_username: session.username,
+    p_password: session.password
   });
 
   if (error) {
@@ -74,8 +77,8 @@ async function pushLocalMemos(session) {
   if (!client) return;
 
   const { error } = await client.rpc('sync_memos', {
-    p_user_id: session.userId,
-    p_pin: session.pin,
+    p_username: session.username,
+    p_password: session.password,
     p_memos: appData.memos
   });
 
@@ -120,7 +123,7 @@ function syncPushInBackground() {
 }
 
 // "업데이트" 버튼을 눌렀을 때 실행하는 수동 동기화
-// 같은 PIN으로 로그인된 다른 기기가 올려둔 메모를 받아오고, 병합 결과를 다시 서버에 반영함
+// 같은 아이디+비밀번호로 로그인된 다른 기기가 올려둔 메모를 받아오고, 병합 결과를 다시 서버에 반영함
 async function manualSync() {
   const session = loadSession();
   if (!session) return { ok: false, reason: 'NO_SESSION' };

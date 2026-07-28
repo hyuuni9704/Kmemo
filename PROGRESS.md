@@ -43,9 +43,9 @@
 - [ ] (체크리스트 미정 — CLAUDE.md에 항목 추가 시 함께 갱신)
 
 ### 8단계. 로그인 & 기기 간 동기화 (사용자 요청으로 신규 추가, 2026-07-28)
-- [x] 로그인 화면(PIN 4자리) & 세션 유지 & 로그아웃 (2026-07-28, 1차 자동화 확인 완료 / 2차 실기기 확인은 Supabase 연결 후)
-- [x] Supabase 스키마(`supabase/schema.sql`: users/data 테이블 + auth_login/get_memos/sync_memos RPC) 작성 (2026-07-28)
-- [ ] 실제 Supabase 프로젝트 연결 (`js/supabase-config.js`에 URL/anon key 입력) — 사용자 진행 대기
+- [x] 로그인 화면(아이디+비밀번호, 최초 PIN 방식에서 사용자 요청으로 변경) & 세션 유지 & 로그아웃 (2026-07-28, 1차 자동화 확인 완료 / 2차 실기기 확인 대기)
+- [x] Supabase 스키마(`supabase/schema.sql`: users(username/password_hash)/data 테이블 + auth_login/get_memos/sync_memos RPC) 작성 (2026-07-28)
+- [x] 실제 Supabase 프로젝트 연결 (`js/supabase-config.js`에 URL/anon key 입력) 완료, 1차 자동화 확인 완료 (2026-07-28, 2차 대기)
 - [x] 메모 저장 시 자동 백그라운드 동기화 + 병합 로직 (2026-07-28, 1차 자동화 확인 완료 / 2차 대기)
 - [x] 메인화면 우측 하단 "⟳ 업데이트" 수동 동기화 버튼 (2026-07-28, 1차 자동화 확인 완료 / 2차 대기)
 
@@ -94,3 +94,5 @@
 - `js/main.js` 수정: `init()`을 세션 유무에 따라 로그인 화면 또는 메인 앱으로 분기하도록 재구성(`bootApp` 역할), 기존 초기화 로직은 `initMainApp()`으로 이동, `saveData()`가 저장 시마다 `syncPushInBackground()` 호출하도록 변경.
 - 1차 자동화 확인: node/npm/python이 없는 환경이라 Chrome 헤드리스(`chrome.exe --headless=new --dump-dom`)로 직접 테스트. 처음엔 `file://` 경로의 드라이브 문자 형식 오류, 그다음 인라인 `<script defer>`가 스펙상 무시되는 문제(스크립트가 main.js보다 먼저 실행되어 `bindLoginView is not defined` 오류)를 차례로 해결한 뒤, PIN 형식 오류 검증("4자리 숫자를 입력해주세요" 정상 표시)과 세션 우회 시 메인화면 진입(로그인 화면 숨김, 로그아웃/업데이트 버튼 노출, 버튼이 실제 뷰포트 안에 위치)까지 전부 정상 확인.
 - 2차 실기기 확인은 사용자가 Supabase 프로젝트를 생성하고 `supabase/schema.sql` 실행 + `js/supabase-config.js`에 URL/anon key 입력을 완료한 뒤 진행 예정 (대기 중).
+- 사용자가 Supabase 프로젝트 URL(JWT anon key의 `ref` 클레임으로 역산: `ubxlxnhoielyvnfjiovp`)과 anon key를 제공 → `js/supabase-config.js`에 반영. curl로 RPC 직접 호출해 `auth_login`(신규 등록/동일 PIN 재로그인/틀린 PIN 거부)·`get_memos`·`sync_memos` 전부 정상 동작 확인. 처음엔 `search_path = public`만 지정해 Supabase가 `extensions` 스키마에 설치하는 `pgcrypto`의 `digest()`를 못 찾는 오류(`function digest(text, unknown) does not exist`) 발생 → `search_path = public, extensions`로 수정 후 재실행하여 해결. 실제 앱 코드(`js/sync.js`/`js/main.js`)로 헤드리스 브라우저에서 진짜 로그인 + 서버에 올려둔 테스트 메모가 병합되어 내려오는 것까지 end-to-end로 확인 완료. 이후 CLAUDE.md/PROGRESS.md 최종 반영 후 커밋(`dd4784f`) 및 GitHub 푸시, Vercel 자동 재배포 확인(https://kmemo-nine.vercel.app/ 에서 로그인 화면 정상 노출 WebFetch로 확인).
+- 사용자가 "첫 로그인 시 아이디와 비번을 치고 두 번째부터는 자동 로그인"을 요청 → 이미 자동 로그인은 구현돼 있었으나, 인증 방식 자체를 PIN(4자리)에서 **아이디+비밀번호**로 바꿔달라는 의미였음을 확인 후 진행. `supabase/schema.sql`을 아이디/비밀번호 방식으로 전면 재작성(기존 PIN 기반 테이블/함수 `drop` 후 재생성 — 테스트 계정만 있던 단계라 데이터 보존 불필요): `kmemo_users(username, password_hash)`, `auth_login(p_username, p_password)`(신규 아이디는 자동 등록, 기존 아이디는 비밀번호 해시 비교 후 불일치 시 `WRONG_PASSWORD` 예외), `get_memos`/`sync_memos`도 동일하게 아이디+비밀번호 재검증으로 변경. `js/sync.js`의 `loginWithPin` → `loginWithCredentials(username, password)`로 교체, 세션 구조를 `{userId, username, password}`로 변경. `index.html` 로그인 화면을 PIN 입력 1칸에서 아이디/비밀번호 2칸 입력으로 교체, `js/main.js`의 `handleLoginSubmit`에 아이디 필수·비밀번호 4자 이상 검증과 틀린 비밀번호 전용 에러 메시지 추가. 사용자가 새 SQL 스크립트를 재실행한 뒤 curl과 헤드리스 브라우저로 재검증(신규 아이디 등록/동일 자격증명 재로그인/틀린 비밀번호 거부/실제 로그인 성공까지) 전부 통과 확인.

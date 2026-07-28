@@ -789,20 +789,28 @@ function showLoginError(message) {
 }
 
 async function handleLoginSubmit() {
-  const pinInput = document.getElementById('loginPinInput');
-  const pin = pinInput.value.trim();
+  const username = document.getElementById('loginUsernameInput').value.trim();
+  const password = document.getElementById('loginPasswordInput').value;
 
   document.getElementById('loginErrorMsg').hidden = true;
 
-  if (!/^[0-9]{4}$/.test(pin)) {
-    showLoginError('4자리 숫자를 입력해주세요.');
+  if (!username) {
+    showLoginError('아이디를 입력해주세요.');
+    return;
+  }
+  if (password.length < 4) {
+    showLoginError('비밀번호는 4자 이상 입력해주세요.');
     return;
   }
 
   try {
-    await loginWithPin(pin);
+    await loginWithCredentials(username, password);
   } catch (err) {
-    showLoginError('인터넷 연결을 확인한 뒤 다시 시도해주세요.');
+    if (err.message === 'WRONG_PASSWORD') {
+      showLoginError('비밀번호가 일치하지 않습니다.');
+    } else {
+      showLoginError('인터넷 연결을 확인한 뒤 다시 시도해주세요.');
+    }
     return;
   }
 
@@ -811,7 +819,10 @@ async function handleLoginSubmit() {
 
 function bindLoginView() {
   document.getElementById('loginSubmitBtn').addEventListener('click', handleLoginSubmit);
-  document.getElementById('loginPinInput').addEventListener('keydown', (e) => {
+  document.getElementById('loginUsernameInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleLoginSubmit();
+  });
+  document.getElementById('loginPasswordInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') handleLoginSubmit();
   });
 }
@@ -820,7 +831,7 @@ function bindLoginView() {
 function bindLogoutButton() {
   document.getElementById('logoutBtn').hidden = false;
   document.getElementById('logoutBtn').addEventListener('click', () => {
-    const ok = window.confirm('로그아웃하시겠습니까? 다음에 다시 인증번호를 입력해야 합니다.');
+    const ok = window.confirm('로그아웃하시겠습니까? 다음에 다시 아이디/비밀번호를 입력해야 합니다.');
     if (ok) logout();
   });
 }
