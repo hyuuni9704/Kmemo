@@ -459,6 +459,86 @@ main {
   background: none;
 }
 
+/* ===== 메모 알림/주기 설정 ===== */
+.reminder-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.reminder-type-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.reminder-radio {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reminder-dates-field,
+.reminder-interval-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.reminder-dates-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.reminder-date-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.reminder-date-row input[type="date"] {
+  padding: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+.btn-remove-date {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 2px 8px;
+  color: var(--color-text-secondary);
+}
+
+.btn-add-date {
+  align-self: flex-start;
+  background: none;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: var(--color-primary);
+  font-size: 13px;
+}
+
+.reminder-interval-field {
+  flex-direction: row;
+  align-items: center;
+}
+
+.reminder-interval-input {
+  width: 70px;
+  padding: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
 /* ===== 메인화면 미니 달력 ===== */
 .mini-calendar {
   border: 1px solid var(--color-border);

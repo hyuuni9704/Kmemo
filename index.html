@@ -142,6 +142,35 @@
           <input class="memo-color-input" id="memoColorInput" type="color" value="#4a90e2">
         </div>
 
+        <!-- 알림/주기 설정 -->
+        <div class="reminder-field">
+          <label>알림 주기</label>
+          <div class="reminder-type-group" id="reminderTypeGroup">
+            <label class="reminder-radio">
+              <input type="radio" name="reminderType" value="none" checked>
+              <span>알림 없음</span>
+            </label>
+            <label class="reminder-radio">
+              <input type="radio" name="reminderType" value="dates">
+              <span>특정 날짜 지정</span>
+            </label>
+            <label class="reminder-radio">
+              <input type="radio" name="reminderType" value="interval">
+              <span>N일마다 반복</span>
+            </label>
+          </div>
+
+          <div class="reminder-dates-field" id="reminderDatesField" hidden>
+            <div class="reminder-dates-list" id="reminderDatesList"></div>
+            <button type="button" class="btn-add-date" id="addReminderDateBtn">+ 날짜 추가</button>
+          </div>
+
+          <div class="reminder-interval-field" id="reminderIntervalField" hidden>
+            <input class="reminder-interval-input" id="reminderIntervalInput" type="number" min="1" placeholder="예: 7">
+            <span>일마다</span>
+          </div>
+        </div>
+
         <input class="memo-title-input" id="memoTitleInput" type="text" placeholder="제목">
         <textarea class="memo-content-input" id="memoContentInput" placeholder="새로운 메모 작성을 위해 입력하세요" rows="10"></textarea>
 

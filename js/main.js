@@ -585,6 +585,56 @@ function updateStatusFieldVisibility(scope) {
   document.getElementById('statusField').hidden = scope === 'general';
 }
 
+// ---- 알림/주기 설정 ----
+function getSelectedReminderType() {
+  const checked = document.querySelector('input[name="reminderType"]:checked');
+  return checked ? checked.value : 'none';
+}
+
+function setReminderRadio(type) {
+  document.querySelectorAll('input[name="reminderType"]').forEach((radio) => {
+    radio.checked = radio.value === type;
+  });
+}
+
+function updateReminderFieldVisibility(type) {
+  document.getElementById('reminderDatesField').hidden = type !== 'dates';
+  document.getElementById('reminderIntervalField').hidden = type !== 'interval';
+}
+
+function createReminderDateRow(value) {
+  const row = document.createElement('div');
+  row.className = 'reminder-date-row';
+
+  const input = document.createElement('input');
+  input.type = 'date';
+  input.value = value || '';
+
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.className = 'btn-remove-date';
+  removeBtn.textContent = '삭제';
+  removeBtn.addEventListener('click', () => row.remove());
+
+  row.appendChild(input);
+  row.appendChild(removeBtn);
+  return row;
+}
+
+function renderReminderDatesList(dates) {
+  const container = document.getElementById('reminderDatesList');
+  container.innerHTML = '';
+
+  const initialDates = dates && dates.length ? dates : [''];
+  initialDates.forEach((dateValue) => container.appendChild(createReminderDateRow(dateValue)));
+}
+
+function getReminderDatesFromForm() {
+  return Array.from(document.querySelectorAll('#reminderDatesList input[type="date"]'))
+    .map((el) => el.value)
+    .filter(Boolean);
+}
+
 function openMemoForm(memoId, options = {}) {
   editingMemoId = memoId || null;
   formReturnView = options.returnView || 'list';
@@ -603,6 +653,14 @@ function openMemoForm(memoId, options = {}) {
   document.getElementById('memoDoneInput').checked = memo ? memo.isDone : false;
   document.getElementById('memoWatchingInput').checked = memo ? memo.isWatching : false;
   document.getElementById('deleteMemoBtn').hidden = !memo;
+
+  const reminder = memo ? memo.reminder : null;
+  const reminderType = (reminder && reminder.type) || 'none';
+  setReminderRadio(reminderType);
+  updateReminderFieldVisibility(reminderType);
+  renderReminderDatesList(reminder ? reminder.dates : []);
+  document.getElementById('reminderIntervalInput').value =
+    reminder && reminder.intervalDays ? reminder.intervalDays : '';
 
   const defaultCategoryIds = memo ? memo.categories : [currentListCategoryId];
   renderCategoryCheckboxes(defaultCategoryIds);
@@ -656,6 +714,14 @@ function saveMemoForm() {
   const date = document.getElementById('memoDateInput').value;
   const isDone = document.getElementById('memoDoneInput').checked;
   const isWatching = document.getElementById('memoWatchingInput').checked;
+  const reminderTypeInput = getSelectedReminderType();
+  const reminder = {
+    type: reminderTypeInput === 'none' ? null : reminderTypeInput,
+    dates: reminderTypeInput === 'dates' ? getReminderDatesFromForm() : [],
+    intervalDays: reminderTypeInput === 'interval'
+      ? (parseInt(document.getElementById('reminderIntervalInput').value, 10) || null)
+      : null
+  };
 
   if (!title && !content) {
     window.alert('제목이나 내용을 입력해주세요.');
@@ -678,11 +744,13 @@ function saveMemoForm() {
     memo.date = date;
     memo.isDone = isDone;
     memo.isWatching = isWatching;
+    memo.reminder = reminder;
     memo.updatedAt = new Date().toISOString();
   } else {
     const newMemo = createMemo({ title, content, categoryIds, color, scope, date });
     newMemo.isDone = isDone;
     newMemo.isWatching = isWatching;
+    newMemo.reminder = reminder;
     appData.memos.push(newMemo);
   }
 
@@ -695,6 +763,10 @@ function saveMemoForm() {
     document.getElementById('memoContentInput').value = '';
     document.getElementById('memoDoneInput').checked = false;
     document.getElementById('memoWatchingInput').checked = false;
+    setReminderRadio('none');
+    updateReminderFieldVisibility('none');
+    renderReminderDatesList([]);
+    document.getElementById('reminderIntervalInput').value = '';
     document.getElementById('memoTitleInput').focus();
   } else {
     navigateToFormReturnView();
@@ -884,12 +956,81 @@ async function startMainAppAfterLogin() {
   initMainApp();
 }
 
+// ===== 알림/주기 체크 =====
+// 메모별로 하루에 한 번만 알림이 뜨도록 (메모id -> 마지막으로 알림을 보낸 날짜) 기록
+const NOTIFIED_KEY = 'kmemo_notified';
+
+function loadNotifiedMap() {
+  try {
+    return JSON.parse(localStorage.getItem(NOTIFIED_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveNotifiedMap(map) {
+  localStorage.setItem(NOTIFIED_KEY, JSON.stringify(map));
+}
+
+function daysBetween(fromDateKey, toDateKey) {
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const from = new Date(`${fromDateKey}T00:00:00`);
+  const to = new Date(`${toDateKey}T00:00:00`);
+  return Math.round((to - from) / msPerDay);
+}
+
+function memoNeedsReminderToday(memo, todayKeyValue) {
+  const reminder = memo.reminder;
+  if (!reminder || !reminder.type) return false;
+
+  if (reminder.type === 'dates') {
+    return Array.isArray(reminder.dates) && reminder.dates.includes(todayKeyValue);
+  }
+
+  if (reminder.type === 'interval' && reminder.intervalDays > 0) {
+    const startKey = getDateKey(memo.createdAt);
+    const diff = daysBetween(startKey, todayKeyValue);
+    return diff >= 0 && diff % reminder.intervalDays === 0;
+  }
+
+  return false;
+}
+
+function checkReminders() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'denied') return;
+
+  const runCheck = () => {
+    const today = todayKey();
+    const notifiedMap = loadNotifiedMap();
+
+    appData.memos.forEach((memo) => {
+      if (!memoNeedsReminderToday(memo, today)) return;
+      if (notifiedMap[memo.id] === today) return;
+
+      new Notification(memo.title || '메모 알림', { body: memo.content || '' });
+      notifiedMap[memo.id] = today;
+    });
+
+    saveNotifiedMap(notifiedMap);
+  };
+
+  if (Notification.permission === 'granted') {
+    runCheck();
+  } else {
+    Notification.requestPermission().then((permission) => {
+      if (permission === 'granted') runCheck();
+    });
+  }
+}
+
 function initMainApp() {
   renderAppName();
   renderCommonButton();
   renderCategoryButtons();
   bindCommonButton();
   renderMiniCalendar();
+  checkReminders();
   showView('main');
 
   document.getElementById('appTitle').addEventListener('click', renameAppName);
@@ -926,6 +1067,13 @@ function initMainApp() {
 
   document.querySelectorAll('input[name="memoScope"]').forEach((radio) => {
     radio.addEventListener('change', () => updateStatusFieldVisibility(getSelectedScope()));
+  });
+
+  document.querySelectorAll('input[name="reminderType"]').forEach((radio) => {
+    radio.addEventListener('change', () => updateReminderFieldVisibility(getSelectedReminderType()));
+  });
+  document.getElementById('addReminderDateBtn').addEventListener('click', () => {
+    document.getElementById('reminderDatesList').appendChild(createReminderDateRow(''));
   });
 
   document.getElementById('formCancelBtn').addEventListener('click', () => navigateToFormReturnView());
