@@ -42,6 +42,13 @@
 ### 7단계. UI 확장
 - [ ] (체크리스트 미정 — CLAUDE.md에 항목 추가 시 함께 갱신)
 
+### 8단계. 로그인 & 기기 간 동기화 (사용자 요청으로 신규 추가, 2026-07-28)
+- [x] 로그인 화면(PIN 4자리) & 세션 유지 & 로그아웃 (2026-07-28, 1차 자동화 확인 완료 / 2차 실기기 확인은 Supabase 연결 후)
+- [x] Supabase 스키마(`supabase/schema.sql`: users/data 테이블 + auth_login/get_memos/sync_memos RPC) 작성 (2026-07-28)
+- [ ] 실제 Supabase 프로젝트 연결 (`js/supabase-config.js`에 URL/anon key 입력) — 사용자 진행 대기
+- [x] 메모 저장 시 자동 백그라운드 동기화 + 병합 로직 (2026-07-28, 1차 자동화 확인 완료 / 2차 대기)
+- [x] 메인화면 우측 하단 "⟳ 업데이트" 수동 동기화 버튼 (2026-07-28, 1차 자동화 확인 완료 / 2차 대기)
+
 ---
 
 ## 현재 상태 요약
@@ -77,3 +84,13 @@
 
 ### 2026-07-28
 - 2단계 "배포하기(초안 확인용)" 진행: 사용자가 Vercel 대시보드에서 GitHub 저장소(`hyuuni9704/Kmemo`)를 Import하여 배포 완료. 배포 URL: https://kmemo-nine.vercel.app/ . WebFetch로 메인화면(오늘의 메모/이번 달 할 일/사업자 필수 항목 등) 정상 로딩 1차 자동화 확인 완료. CLAUDE.md "배포 URL" 항목 및 체크리스트 갱신. 이후 사용자가 폰 브라우저로 접속해 정상 동작 2차 확인 완료 — "배포하기" 기능 최종 완료 처리.
+
+### 2026-07-28 (8단계 신규 추가: 로그인 & 기기 간 동기화)
+- 사용자 요청으로 체크리스트에 없던 "첫화면 로그인" 기능을 새로 추가하기로 함. 이 앱이 서버 없는 완전 오프라인 구조라 "로그인"의 의미(계정 인증 vs 단순 잠금)를 먼저 사용자와 확정: PIN(4자리) 잠금 + 동일 PIN으로 여러 기기 인증 시 메모 데이터 동기화까지 필요하다고 확인. 이는 서버/DB 신규 도입이 필요한 큰 변경이라 오프라인 우선 원칙과의 충돌, PIN 보안 취약성(4자리는 무차별 대입에 약함, 사용자가 인지하고 감수하기로 함), 백엔드 선택(Supabase 선택)을 순서대로 확인 후 진행.
+- `supabase/schema.sql` 작성: `kmemo_users`(pin_hash)/`kmemo_data`(user_id, data jsonb) 테이블 + `auth_login`/`get_memos`/`sync_memos` RPC 함수. 원본 테이블은 RLS + 권한 회수로 완전 차단하고, PIN을 매 호출마다 해시 비교로 재검증하는 SECURITY DEFINER 함수로만 접근하도록 구성해 4자리 PIN의 약점을 최소화. 사용자가 Supabase 프로젝트를 만들어 SQL Editor에서 직접 실행해야 함 (아직 미실행, URL/anon key도 미제공 → `js/supabase-config.js`는 플레이스홀더 상태).
+- `js/sync.js`(신규) 추가: 세션(`kmemo_session`) 저장/조회, `loginWithPin`, 서버↔로컬 메모 병합(`updatedAt` 기준 최신 우선), 자동 백그라운드 동기화(`syncPushInBackground`, `saveData()` 호출 시마다 실행), 수동 동기화(`manualSync`) 구현.
+- `index.html`에 로그인 화면(`view-login`, PIN 4자리 입력) 추가 및 스크립트 로드 순서 정리(supabase-js CDN → supabase-config → sync → main). 헤더에 로그아웃 버튼 추가.
+- 사용자 추가 요청: 메인화면 우측 하단에 작게 "업데이트" 버튼을 만들어 온라인일 때 누르면 같은 계정으로 로그인된 다른 기기의 메모가 반영되게 해달라는 요청 → 같은 8단계 기능으로 판단해 함께 진행. `updateSyncBtn` 버튼과 `handleManualSyncClick` 핸들러 추가(동기화 중/완료/실패 상태 텍스트 표시).
+- `js/main.js` 수정: `init()`을 세션 유무에 따라 로그인 화면 또는 메인 앱으로 분기하도록 재구성(`bootApp` 역할), 기존 초기화 로직은 `initMainApp()`으로 이동, `saveData()`가 저장 시마다 `syncPushInBackground()` 호출하도록 변경.
+- 1차 자동화 확인: node/npm/python이 없는 환경이라 Chrome 헤드리스(`chrome.exe --headless=new --dump-dom`)로 직접 테스트. 처음엔 `file://` 경로의 드라이브 문자 형식 오류, 그다음 인라인 `<script defer>`가 스펙상 무시되는 문제(스크립트가 main.js보다 먼저 실행되어 `bindLoginView is not defined` 오류)를 차례로 해결한 뒤, PIN 형식 오류 검증("4자리 숫자를 입력해주세요" 정상 표시)과 세션 우회 시 메인화면 진입(로그인 화면 숨김, 로그아웃/업데이트 버튼 노출, 버튼이 실제 뷰포트 안에 위치)까지 전부 정상 확인.
+- 2차 실기기 확인은 사용자가 Supabase 프로젝트를 생성하고 `supabase/schema.sql` 실행 + `js/supabase-config.js`에 URL/anon key 입력을 완료한 뒤 진행 예정 (대기 중).

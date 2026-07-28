@@ -46,6 +46,7 @@ button {
 
 /* ===== 상단 앱 이름 ===== */
 .app-header {
+  position: relative;
   display: flex;
   justify-content: center;
   padding: var(--spacing-lg) var(--spacing-md) var(--spacing-sm);
@@ -64,6 +65,92 @@ button {
 .app-title:hover,
 .app-title:focus-visible {
   background-color: var(--color-surface);
+}
+
+.btn-logout {
+  position: absolute;
+  right: var(--spacing-md);
+  top: var(--spacing-lg);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+/* ===== 로그인 화면 ===== */
+.login-box {
+  max-width: 320px;
+  margin: 20vh auto 0;
+  padding: var(--spacing-lg);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.login-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.login-desc {
+  margin: 0 0 var(--spacing-sm);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.login-pin-input {
+  font-size: 24px;
+  letter-spacing: 8px;
+  text-align: center;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+.btn-login {
+  padding: var(--spacing-sm);
+  border: none;
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.btn-login:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.login-error {
+  margin: 0;
+  color: #d64545;
+  font-size: 13px;
+}
+
+/* ===== 수동 동기화("업데이트") 버튼 ===== */
+.btn-sync-update {
+  position: fixed;
+  right: var(--spacing-md);
+  bottom: var(--spacing-md);
+  padding: 6px 12px;
+  font-size: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.btn-sync-update:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 /* ===== 메인화면 레이아웃 ===== */

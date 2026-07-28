@@ -10,11 +10,23 @@
   <!-- 상단: 앱 이름 (클릭하여 변경 가능) -->
   <header class="app-header">
     <button class="app-title" id="appTitle" type="button" aria-label="앱 이름 변경"></button>
+    <button class="btn-logout" id="logoutBtn" type="button" hidden>로그아웃</button>
   </header>
 
   <main>
+    <!-- 로그인 화면: 인증번호(PIN) 입력, 기기 간 동기화용 -->
+    <section class="view" id="view-login">
+      <div class="login-box">
+        <h1 class="login-title">Kmemo</h1>
+        <p class="login-desc">4자리 인증번호를 입력하세요.<br>처음이라면 자동으로 등록됩니다.</p>
+        <input class="login-pin-input" id="loginPinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" autocomplete="off">
+        <button class="btn-login" id="loginSubmitBtn" type="button">확인</button>
+        <p class="login-error" id="loginErrorMsg" hidden></p>
+      </div>
+    </section>
+
     <!-- 메인화면: 공통/개인/사업자/추가 사업체 버튼 -->
-    <section class="view" id="view-main">
+    <section class="view" id="view-main" hidden>
       <section class="common-section">
         <div class="category-item category-item--common">
           <button class="btn-common" id="commonBtn" type="button"></button>
@@ -35,6 +47,9 @@
         </div>
         <div class="calendar-grid" id="calendarGrid"></div>
       </section>
+
+      <!-- 같은 계정(PIN)으로 로그인된 다른 기기와 수동 동기화 -->
+      <button class="btn-sync-update" id="updateSyncBtn" type="button">⟳ 업데이트</button>
     </section>
 
     <!-- 카테고리별 대시보드 화면: 달력 + 오늘의 메모 + 이번 달 할 일 + 사업자 필수 항목 -->
@@ -148,6 +163,9 @@
     </section>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
+  <script src="js/supabase-config.js" defer></script>
+  <script src="js/sync.js" defer></script>
   <script src="js/main.js" defer></script>
 </body>
 </html>

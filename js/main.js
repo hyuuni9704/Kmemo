@@ -32,6 +32,7 @@ function loadData() {
 
 function saveData() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+  syncPushInBackground();
 }
 
 let appData = loadData();
@@ -60,11 +61,22 @@ const SCOPE_LABELS = {
 };
 
 // ===== 화면 전환 =====
+let currentViewName = 'login';
+
 function showView(viewName) {
+  currentViewName = viewName;
+  document.getElementById('view-login').hidden = viewName !== 'login';
   document.getElementById('view-main').hidden = viewName !== 'main';
   document.getElementById('view-list').hidden = viewName !== 'list';
   document.getElementById('view-scopelist').hidden = viewName !== 'scopelist';
   document.getElementById('view-form').hidden = viewName !== 'form';
+}
+
+// 백그라운드 동기화로 데이터가 바뀐 뒤, 현재 보고 있는 화면만 다시 그림
+function refreshCurrentView() {
+  if (currentViewName === 'main') renderMiniCalendar();
+  else if (currentViewName === 'list') renderDashboard();
+  else if (currentViewName === 'scopelist') renderScopeList();
 }
 
 // ===== 앱 이름 =====
@@ -769,8 +781,81 @@ function renderMiniCalendar() {
   }
 }
 
-// ===== 초기화 =====
-function init() {
+// ===== 로그인 화면 =====
+function showLoginError(message) {
+  const errorEl = document.getElementById('loginErrorMsg');
+  errorEl.textContent = message;
+  errorEl.hidden = false;
+}
+
+async function handleLoginSubmit() {
+  const pinInput = document.getElementById('loginPinInput');
+  const pin = pinInput.value.trim();
+
+  document.getElementById('loginErrorMsg').hidden = true;
+
+  if (!/^[0-9]{4}$/.test(pin)) {
+    showLoginError('4자리 숫자를 입력해주세요.');
+    return;
+  }
+
+  try {
+    await loginWithPin(pin);
+  } catch (err) {
+    showLoginError('인터넷 연결을 확인한 뒤 다시 시도해주세요.');
+    return;
+  }
+
+  startMainApp();
+}
+
+function bindLoginView() {
+  document.getElementById('loginSubmitBtn').addEventListener('click', handleLoginSubmit);
+  document.getElementById('loginPinInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleLoginSubmit();
+  });
+}
+
+// ===== 로그아웃 =====
+function bindLogoutButton() {
+  document.getElementById('logoutBtn').hidden = false;
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    const ok = window.confirm('로그아웃하시겠습니까? 다음에 다시 인증번호를 입력해야 합니다.');
+    if (ok) logout();
+  });
+}
+
+// ===== 수동 동기화 버튼 =====
+async function handleManualSyncClick() {
+  const btn = document.getElementById('updateSyncBtn');
+  const originalText = btn.textContent;
+
+  btn.disabled = true;
+  btn.textContent = '동기화 중...';
+
+  const result = await manualSync();
+
+  if (result.ok) {
+    refreshCurrentView();
+    btn.textContent = '완료!';
+  } else {
+    btn.textContent = '실패 (오프라인?)';
+  }
+
+  setTimeout(() => {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }, 1500);
+}
+
+// ===== 앱 진입 =====
+function startMainApp() {
+  bindLogoutButton();
+  initMainApp();
+  syncOnLoad();
+}
+
+function initMainApp() {
   renderAppName();
   renderCommonButton();
   renderCategoryButtons();
@@ -780,6 +865,7 @@ function init() {
 
   document.getElementById('appTitle').addEventListener('click', renameAppName);
   document.getElementById('addBusinessBtn').addEventListener('click', addExtraBusiness);
+  document.getElementById('updateSyncBtn').addEventListener('click', handleManualSyncClick);
   document.getElementById('calendarPrevBtn').addEventListener('click', () => changeCalendarMonth(-1));
   document.getElementById('calendarNextBtn').addEventListener('click', () => changeCalendarMonth(1));
 
@@ -819,6 +905,16 @@ function init() {
     e.preventDefault();
     saveMemoForm();
   });
+}
+
+function init() {
+  bindLoginView();
+
+  if (loadSession()) {
+    startMainApp();
+  } else {
+    showView('login');
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
