@@ -390,10 +390,10 @@ function renderDayMemoCard() {
   memos.slice(0, 5).forEach((memo) => container.appendChild(createDayMemoRow(memo)));
 }
 
-function createDayMemoRow(memo) {
+function createDayMemoRow(memo, returnView = 'list') {
   const row = document.createElement('div');
   row.className = 'dashboard-row';
-  row.addEventListener('click', () => openMemoForm(memo.id, { returnView: 'list' }));
+  row.addEventListener('click', () => openMemoForm(memo.id, { returnView }));
 
   const dot = document.createElement('span');
   dot.className = 'dashboard-row__dot';
@@ -732,6 +732,10 @@ function navigateToFormReturnView() {
   if (formReturnView === 'scopelist') {
     showView('scopelist');
     renderScopeList();
+  } else if (formReturnView === 'main') {
+    showView('main');
+    renderMiniCalendar();
+    renderMainTodayMemoCard();
   } else {
     showView('list');
     renderDashboard();
@@ -885,6 +889,22 @@ function renderMiniCalendar() {
 
     grid.appendChild(cell);
   }
+
+  renderMainTodayMemoCard();
+}
+
+// 메인화면 미니달력 아래: 오늘 작성된 메모 (전체 카테고리 통합)
+function renderMainTodayMemoCard() {
+  const memos = getGeneralMemosForDay('common', todayKey());
+  const container = document.getElementById('mainTodayMemoList');
+  container.innerHTML = '';
+
+  if (memos.length === 0) {
+    container.appendChild(createEmptyMessage('오늘 작성된 메모가 없습니다.'));
+    return;
+  }
+
+  memos.slice(0, 5).forEach((memo) => container.appendChild(createDayMemoRow(memo, 'main')));
 }
 
 // ===== 로그인 화면 =====
