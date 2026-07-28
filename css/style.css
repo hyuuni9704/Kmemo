@@ -450,13 +450,22 @@ main {
   color: var(--color-text-secondary);
 }
 
-.memo-color-input {
-  width: 44px;
-  height: 32px;
+.color-swatch-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
   padding: 0;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  background: none;
+}
+
+.color-swatch--selected {
+  border-color: var(--color-text);
 }
 
 /* ===== 메모 알림/주기 설정 ===== */

@@ -54,6 +54,12 @@ let currentScopeListScope = 'general';
 
 const DEFAULT_MEMO_COLOR = '#4a90e2';
 
+// 메모 작성 시 고를 수 있는 달력 표시 색상 10가지
+const MEMO_COLOR_PALETTE = [
+  '#4A90E2', '#E74C3C', '#2ECC71', '#F5A623', '#9B59B6',
+  '#1ABC9C', '#FF4081', '#F1C40F', '#34495E', '#795548'
+];
+
 const SCOPE_LABELS = {
   general: '일반 메모',
   'calendar-month': '이번 달 할 일',
@@ -301,6 +307,10 @@ function renderDashboardCalendar() {
     if (!dateColorMap[key]) dateColorMap[key] = [];
     dateColorMap[key].push(memo.color || DEFAULT_MEMO_COLOR);
   });
+  addReminderDotsForMonth(
+    dateColorMap, year, month,
+    appData.memos.filter((m) => memoMatchesCategory(m, currentListCategoryId))
+  );
 
   const grid = document.getElementById('dashCalendarGrid');
   grid.innerHTML = '';
@@ -635,6 +645,28 @@ function getReminderDatesFromForm() {
     .filter(Boolean);
 }
 
+// ---- 메모 색상 스와치 ----
+function renderColorSwatches(selectedColor) {
+  const container = document.getElementById('colorSwatchGroup');
+  container.innerHTML = '';
+
+  MEMO_COLOR_PALETTE.forEach((color) => {
+    const swatch = document.createElement('button');
+    swatch.type = 'button';
+    swatch.className = 'color-swatch';
+    swatch.style.backgroundColor = color;
+    swatch.setAttribute('aria-label', `색상 ${color}`);
+    if (color.toLowerCase() === (selectedColor || '').toLowerCase()) {
+      swatch.classList.add('color-swatch--selected');
+    }
+    swatch.addEventListener('click', () => {
+      document.getElementById('memoColorInput').value = color;
+      renderColorSwatches(color);
+    });
+    container.appendChild(swatch);
+  });
+}
+
 function openMemoForm(memoId, options = {}) {
   editingMemoId = memoId || null;
   formReturnView = options.returnView || 'list';
@@ -650,6 +682,7 @@ function openMemoForm(memoId, options = {}) {
   document.getElementById('memoTitleInput').value = memo ? memo.title : '';
   document.getElementById('memoContentInput').value = memo ? memo.content : '';
   document.getElementById('memoColorInput').value = memo ? memo.color : DEFAULT_MEMO_COLOR;
+  renderColorSwatches(memo ? memo.color : DEFAULT_MEMO_COLOR);
   document.getElementById('memoDoneInput').checked = memo ? memo.isDone : false;
   document.getElementById('memoWatchingInput').checked = memo ? memo.isWatching : false;
   document.getElementById('deleteMemoBtn').hidden = !memo;
@@ -796,13 +829,14 @@ function renderMiniCalendar() {
 
   document.getElementById('calendarLabel').textContent = `${year}년 ${month + 1}월`;
 
-  // 날짜별 메모 색상 모음 (일반 메모의 날짜 기준)
+  // 날짜별 메모 색상 모음 (일반 메모의 날짜 기준 + 알림/주기에 해당하는 날짜)
   const dateColorMap = {};
   appData.memos.filter((m) => m.scope === 'general').forEach((memo) => {
     const key = getEffectiveDateKey(memo);
     if (!dateColorMap[key]) dateColorMap[key] = [];
     dateColorMap[key].push(memo.color || DEFAULT_MEMO_COLOR);
   });
+  addReminderDotsForMonth(dateColorMap, year, month, appData.memos);
 
   const grid = document.getElementById('calendarGrid');
   grid.innerHTML = '';
@@ -994,6 +1028,21 @@ function memoNeedsReminderToday(memo, todayKeyValue) {
   }
 
   return false;
+}
+
+// 달력에 표시할 연/월(year/month) 범위 안에서, 알림(주기) 조건에 해당하는 날짜에 메모 색상을 추가
+function addReminderDotsForMonth(dateColorMap, year, month, memos) {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+    memos.forEach((memo) => {
+      if (!memoNeedsReminderToday(memo, key)) return;
+      if (!dateColorMap[key]) dateColorMap[key] = [];
+      dateColorMap[key].push(memo.color || DEFAULT_MEMO_COLOR);
+    });
+  }
 }
 
 function checkReminders() {
