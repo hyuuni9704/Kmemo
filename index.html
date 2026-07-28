@@ -9,6 +9,7 @@
 <body>
   <!-- 상단: 앱 이름 (클릭하여 변경 가능) -->
   <header class="app-header">
+    <button class="btn-search" id="searchBtn" type="button" aria-label="검색" hidden>🔍</button>
     <button class="app-title" id="appTitle" type="button" aria-label="앱 이름 변경"></button>
     <button class="btn-logout" id="logoutBtn" type="button" hidden>로그아웃</button>
   </header>
@@ -113,6 +114,17 @@
       </div>
 
       <div class="memo-list" id="scopeListContainer"></div>
+    </section>
+
+    <!-- 검색 화면 -->
+    <section class="view" id="view-search" hidden>
+      <div class="view-header">
+        <button class="btn-back" id="searchBackBtn" type="button" aria-label="뒤로가기">←</button>
+        <h2 class="view-title">검색</h2>
+      </div>
+
+      <input class="search-input" id="searchInput" type="text" placeholder="메모 제목/내용 검색">
+      <div class="memo-list" id="searchResultsContainer"></div>
     </section>
 
     <!-- 메모 작성/수정 화면 -->

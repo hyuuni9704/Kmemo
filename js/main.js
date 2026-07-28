@@ -75,6 +75,7 @@ function showView(viewName) {
   document.getElementById('view-main').hidden = viewName !== 'main';
   document.getElementById('view-list').hidden = viewName !== 'list';
   document.getElementById('view-scopelist').hidden = viewName !== 'scopelist';
+  document.getElementById('view-search').hidden = viewName !== 'search';
   document.getElementById('view-form').hidden = viewName !== 'form';
 }
 
@@ -517,7 +518,7 @@ function renderScopeList() {
   });
 }
 
-function createMemoCard(memo) {
+function createMemoCard(memo, returnView = 'scopelist') {
   const card = document.createElement('div');
   card.className = 'memo-card';
 
@@ -545,7 +546,7 @@ function createMemoCard(memo) {
   editBtn.type = 'button';
   editBtn.className = 'btn-memo-edit';
   editBtn.textContent = '수정';
-  editBtn.addEventListener('click', () => openMemoForm(memo.id, { returnView: 'scopelist' }));
+  editBtn.addEventListener('click', () => openMemoForm(memo.id, { returnView }));
 
   const deleteBtn = document.createElement('button');
   deleteBtn.type = 'button';
@@ -574,6 +575,8 @@ function deleteMemo(memoId) {
 
   if (!document.getElementById('view-scopelist').hidden) {
     renderScopeList();
+  } else if (!document.getElementById('view-search').hidden) {
+    renderSearchResults();
   } else {
     renderDashboard();
   }
@@ -736,6 +739,9 @@ function navigateToFormReturnView() {
     showView('main');
     renderMiniCalendar();
     renderMainTodayMemoCard();
+  } else if (formReturnView === 'search') {
+    showView('search');
+    renderSearchResults();
   } else {
     showView('list');
     renderDashboard();
@@ -971,6 +977,48 @@ function bindLogoutButton() {
   });
 }
 
+// ===== 검색 =====
+function bindSearchButton() {
+  document.getElementById('searchBtn').hidden = false;
+  document.getElementById('searchBtn').addEventListener('click', openSearchView);
+}
+
+function openSearchView() {
+  showView('search');
+  document.getElementById('searchInput').value = '';
+  renderSearchResults();
+  document.getElementById('searchInput').focus();
+}
+
+// 메모 제목/내용 기준, 전체 카테고리 통합 검색 (대소문자 구분 없음)
+function searchMemos(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+
+  return appData.memos
+    .filter((memo) => (memo.title || '').toLowerCase().includes(q) || (memo.content || '').toLowerCase().includes(q))
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+function renderSearchResults() {
+  const query = document.getElementById('searchInput').value;
+  const container = document.getElementById('searchResultsContainer');
+  container.innerHTML = '';
+
+  if (!query.trim()) {
+    container.appendChild(createEmptyMessage('검색어를 입력하세요.'));
+    return;
+  }
+
+  const results = searchMemos(query);
+  if (results.length === 0) {
+    container.appendChild(createEmptyMessage('검색 결과가 없습니다.'));
+    return;
+  }
+
+  results.forEach((memo) => container.appendChild(createMemoCard(memo, 'search')));
+}
+
 // ===== 수동 동기화 버튼 =====
 async function handleManualSyncClick() {
   const btn = document.getElementById('updateSyncBtn');
@@ -998,6 +1046,7 @@ async function handleManualSyncClick() {
 // 기존 세션으로 재진입: 로컬 데이터로 즉시 화면을 그리고(오프라인 우선), 동기화는 백그라운드로 진행
 function startMainApp() {
   bindLogoutButton();
+  bindSearchButton();
   initMainApp();
   syncOnLoad();
 }
@@ -1006,6 +1055,7 @@ function startMainApp() {
 // 서버 동기화가 끝난 뒤에 화면을 그려서 다른 기기의 메모가 처음부터 보이게 함
 async function startMainAppAfterLogin() {
   bindLogoutButton();
+  bindSearchButton();
   await syncOnLoad();
   initMainApp();
 }
@@ -1133,6 +1183,12 @@ function initMainApp() {
     showView('list');
     renderDashboard();
   });
+
+  document.getElementById('searchBackBtn').addEventListener('click', () => {
+    showView('main');
+    renderMiniCalendar();
+  });
+  document.getElementById('searchInput').addEventListener('input', renderSearchResults);
 
   document.querySelectorAll('input[name="memoScope"]').forEach((radio) => {
     radio.addEventListener('change', () => updateStatusFieldVisibility(getSelectedScope()));

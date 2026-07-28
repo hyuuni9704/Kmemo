@@ -79,6 +79,28 @@ button {
   color: var(--color-text-secondary);
 }
 
+.btn-search {
+  position: absolute;
+  left: var(--spacing-md);
+  top: var(--spacing-lg);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 4px 10px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+/* ===== 검색 화면 ===== */
+.search-input {
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: 15px;
+}
+
 /* ===== 로그인 화면 ===== */
 .login-box {
   max-width: 320px;
