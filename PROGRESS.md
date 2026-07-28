@@ -39,7 +39,7 @@
 
 ### 6단계. 검색 & PWA
 - [x] 메모 내용 기반 검색 (2026-07-28, 1차·2차 확인 모두 완료)
-- [ ] 오프라인 지원 (Service Worker, Manifest)
+- [x] 오프라인 지원 (Service Worker, Manifest) (2026-07-28, 1차 자동화 확인 완료 / 2차 실기기 확인 대기 — file://에서는 Service Worker 등록이 안 돼 배포 후 확인 필요)
 
 ### 7단계. UI 확장
 - [ ] (체크리스트 미정 — CLAUDE.md에 항목 추가 시 함께 갱신)
@@ -123,3 +123,10 @@
 - 검색 결과에서 "수정"을 누르면 검색 화면으로 다시 돌아오도록, 기존에 대시보드 전용이었던 `createMemoCard(memo)`/`createDayMemoRow(memo)`에 `returnView` 매개변수를 추가해 호출부마다 원하는 복귀 화면을 지정할 수 있게 일반화(`navigateToFormReturnView()`에 `'search'` 분기 추가, 검색어는 유지된 채 재검색됨). `deleteMemo()`도 검색 화면에서 삭제 시 검색 결과를 다시 그리도록 분기 추가.
 - 헤드리스 테스트로 검색 버튼 노출, 빈 검색어 안내, "우유" 검색 시 제목/내용에 포함된 메모만 정확히 필터링, 영문 대소문자 무시("MILK" ↔ "Milk"), 검색 결과에서 수정→저장→검색 화면(검색어 유지) 복귀, 뒤로가기 시 메인화면 복귀까지 전부 확인 완료.
 - 2차 실기기 확인 완료: 사용자가 폰/PC에서 검색 버튼, 실시간 검색, 검색 결과 수정 후 복귀, 뒤로가기까지 정상 확인. 6단계 "메모 내용 기반 검색" 체크리스트 1차·2차 확인 완료로 처리.
+
+### 2026-07-28 (6단계: 오프라인 지원 - Service Worker/Manifest)
+- 사용자가 "진행" 요청 → 6단계 남은 항목인 "오프라인 지원(Service Worker, Manifest)" 진행하기로 계획 설명 후 승인받음. `img/` 폴더에 이미 `icon-192x192.png`/`icon-512x512.png`가 준비돼 있어 새로 아이콘을 만들 필요는 없었음.
+- `manifest.json`(신규) 작성: name/short_name "Kmemo", start_url/scope, background_color/theme_color(기존 CSS 변수 팔레트와 맞춤), 아이콘 2종. `index.html`에 `<link rel="manifest">`, `<meta name="theme-color">`, favicon/apple-touch-icon 연결.
+- Service Worker는 계획 당시 `js/sw.js`로 안내했으나, Service Worker의 제어 범위(scope)가 자신이 위치한 폴더 이하로 한정된다는 기술적 제약 때문에 **프로젝트 루트의 `sw.js`**로 위치를 바꿔 구현(그래야 `index.html` 등 사이트 전체를 캐싱/제어할 수 있음). 핵심 정적 파일(index.html/css/js/manifest/아이콘)을 프리캐시하고, "온라인이면 항상 최신 파일을 받아오되 오프라인일 때만 캐시로 대체"하는 네트워크 우선 전략 적용(PC에서 예전 버전이 캐시돼 헷갈렸던 이전 경험을 고려해, 오래된 파일이 계속 우선되는 순수 캐시 우선 전략은 피함). Supabase API/CDN 등 다른 origin으로 가는 요청은 그대로 통과시켜 캐싱 대상에서 제외.
+- `js/main.js` 맨 끝에 `navigator.serviceWorker.register('sw.js')` 등록 코드 추가(로그인 여부와 무관하게 항상 등록 시도).
+- 1차 자동화 확인: PowerShell `ConvertFrom-Json`으로 `manifest.json` 유효성 확인, 헤드리스 브라우저로 `sw.js`를 일반 스크립트로 로드해 문법 오류 없음 확인, 등록 코드 추가 후에도 기존 검색 기능 테스트가 그대로 통과하는 것으로 회귀 없음 확인. Service Worker 등록 자체는 `file://`(보안 컨텍스트 아님)에서 불가능해 실제 오프라인 동작 확인은 배포(https) 후 사용자의 2차 실기기 확인이 필요.

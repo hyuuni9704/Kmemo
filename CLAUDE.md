@@ -292,6 +292,13 @@
       복귀 (2026-07-28, 1차·2차 확인 모두 완료)
 
 ### 오프라인 지원 (Service Worker, Manifest)
+- [x] `manifest.json`(PWA 매니페스트: 이름/아이콘/시작 URL/테마 색상) 추가, `index.html`에 연결.
+      루트의 `sw.js`(Service Worker, `js/` 폴더가 아닌 루트에 위치해야 전체 사이트를 제어 가능)가
+      핵심 정적 파일(index.html/css/js/manifest/아이콘)을 캐싱하고, 온라인일 때는 항상 최신 파일을
+      받아오되 오프라인일 때만 캐시로 대체(네트워크 우선). Supabase/CDN 등 외부 요청은 캐싱 대상에서
+      제외 (2026-07-28, 1차 자동화 확인 완료 — manifest.json JSON 유효성, sw.js 문법 오류 없음 확인.
+      Service Worker는 `file://`에서는 등록 자체가 안 되는 보안 제약이 있어 실제 등록/오프라인 동작은
+      배포(https) 후 2차 실기기 확인 필요)
 
 ---
 
