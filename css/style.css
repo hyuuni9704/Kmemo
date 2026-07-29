@@ -744,11 +744,10 @@ main {
   box-shadow: 0 0 0 1.5px var(--dot-ring-color, currentColor);
 }
 
-/* N일 주기(interval) 알림: 안쪽은 작은 원(점) 그대로 두고, 바깥에 살짝 띄운 큰 링 1개로 표시 */
+/* N일 주기(interval) 알림: 안쪽은 작은 원(점, 메모 색) 그대로 두고, 점에 바로 붙은 두꺼운 큰 링을
+   진한 회색으로 표시. 링을 메모 색과 다르게 해서 틈(간격) 없이도 하나의 모양처럼 구분되어 보임. */
 .calendar-day__dot--reminder-interval {
-  box-shadow:
-    0 0 0 1px var(--color-surface),
-    0 0 0 2.5px var(--dot-ring-color, currentColor);
+  box-shadow: 0 0 0 2px var(--color-text-secondary);
 }
 
 /* 대시보드 달력의 클릭 가능한 날짜 셀 (button) */
