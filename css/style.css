@@ -67,16 +67,23 @@ button {
   background-color: var(--color-surface);
 }
 
-.btn-logout {
+.header-right-group {
   position: absolute;
   right: var(--spacing-md);
   top: var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.btn-logout {
   background: none;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 4px 10px;
   font-size: 12px;
   color: var(--color-text-secondary);
+  white-space: nowrap;
 }
 
 .btn-search {
@@ -92,9 +99,6 @@ button {
 }
 
 .btn-mypage {
-  position: absolute;
-  right: 78px;
-  top: var(--spacing-lg);
   background: none;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);

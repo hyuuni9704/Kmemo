@@ -1389,9 +1389,9 @@ document.addEventListener('DOMContentLoaded', init);
 
 // ===== 오프라인 지원 (Service Worker 등록) + 앱 업데이트 감지/적용 =====
 // 새 버전은 곧바로 적용되지 않고 "대기(waiting)" 상태로 대기함(sw.js에서 skipWaiting을 자동 호출하지 않음).
-// 하루 1번 자동으로 물어보거나, 마이페이지의 "지금 업데이트 확인" 버튼으로 언제든 수동 적용 가능.
+// 앱을 열 때(로그인 시)마다 아직 적용 안 된 새 버전이 있으면 매번 자동으로 물어보거나,
+// 마이페이지의 "지금 업데이트 확인" 버튼으로 언제든 수동 적용 가능.
 // 어느 경로든 메모 데이터(localStorage)는 캐시와 완전히 분리되어 있어 그대로 보존됨.
-const UPDATE_PROMPT_KEY = 'kmemo_update_last_prompt';
 let swRegistration = null;
 let manualUpdateCheckActive = false;
 
@@ -1440,15 +1440,11 @@ function onNewVersionReady() {
     applyPendingUpdate();
     return;
   }
-  maybePromptDailyUpdate();
+  promptForUpdate();
 }
 
-// 하루 1번만 자동으로 업데이트 여부를 확인
-function maybePromptDailyUpdate() {
-  const today = todayKey();
-  if (localStorage.getItem(UPDATE_PROMPT_KEY) === today) return;
-  localStorage.setItem(UPDATE_PROMPT_KEY, today);
-
+// 앱을 열 때(로그인 시)마다 적용 안 된 새 버전이 있으면 매번 물어봄(하루 1회 제한 없음)
+function promptForUpdate() {
   const ok = window.confirm('새 버전이 있습니다. 지금 업데이트하시겠습니까?\n(작성하신 메모는 그대로 안전하게 유지됩니다)');
   if (ok) applyPendingUpdate();
 }
