@@ -394,8 +394,7 @@ function renderDashboardCalendar() {
         dot.className = 'calendar-day__dot';
         dot.style.backgroundColor = entry.color;
         if (entry.isReminder) {
-          dot.classList.add(entry.isInterval ? 'calendar-day__dot--reminder-interval' : 'calendar-day__dot--reminder');
-          dot.style.setProperty('--dot-ring-color', entry.color);
+          dot.classList.add('calendar-day__dot--reminder');
         }
         dotsWrap.appendChild(dot);
       });
@@ -980,8 +979,7 @@ function renderMiniCalendar() {
         dot.className = 'calendar-day__dot';
         dot.style.backgroundColor = entry.color;
         if (entry.isReminder) {
-          dot.classList.add(entry.isInterval ? 'calendar-day__dot--reminder-interval' : 'calendar-day__dot--reminder');
-          dot.style.setProperty('--dot-ring-color', entry.color);
+          dot.classList.add('calendar-day__dot--reminder');
         }
         dotsWrap.appendChild(dot);
       });
@@ -1293,11 +1291,7 @@ function addReminderDotsForMonth(dateColorMap, year, month, memos) {
     memos.forEach((memo) => {
       if (!memoNeedsReminderToday(memo, key)) return;
       if (!dateColorMap[key]) dateColorMap[key] = [];
-      dateColorMap[key].push({
-        color: memo.color || DEFAULT_MEMO_COLOR,
-        isReminder: true,
-        isInterval: memo.reminder.type === 'interval'
-      });
+      dateColorMap[key].push({ color: memo.color || DEFAULT_MEMO_COLOR, isReminder: true });
     });
   }
 }
