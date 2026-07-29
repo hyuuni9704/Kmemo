@@ -133,6 +133,47 @@ function syncPushInBackground() {
   pushLocalMemos(session).catch(() => {});
 }
 
+// ===== 마이페이지: 아이디/비밀번호 변경 =====
+// 화면에서 현재 비밀번호를 다시 입력받지 않지만, 기기에 저장된 로그인 정보로
+// 서버가 매 호출마다 재검증하므로 보안(다른 사람이 이 계정으로 임의 변경하는 것 방지)은 유지됨
+async function changeUsername(newUsername) {
+  const session = loadSession();
+  if (!session) throw new Error('NO_SESSION');
+
+  const client = getSupabaseClient();
+  if (!client) throw new Error('OFFLINE_OR_NOT_CONFIGURED');
+
+  const { error } = await client.rpc('change_username', {
+    p_username: session.username,
+    p_password: session.password,
+    p_new_username: newUsername
+  });
+  if (error) throw error;
+
+  const newSession = { ...session, username: newUsername };
+  saveSession(newSession);
+  return newSession;
+}
+
+async function changePassword(newPassword) {
+  const session = loadSession();
+  if (!session) throw new Error('NO_SESSION');
+
+  const client = getSupabaseClient();
+  if (!client) throw new Error('OFFLINE_OR_NOT_CONFIGURED');
+
+  const { error } = await client.rpc('change_password', {
+    p_username: session.username,
+    p_current_password: session.password,
+    p_new_password: newPassword
+  });
+  if (error) throw error;
+
+  const newSession = { ...session, password: newPassword };
+  saveSession(newSession);
+  return newSession;
+}
+
 // "업데이트" 버튼을 눌렀을 때 실행하는 수동 동기화
 // 같은 아이디+비밀번호로 로그인된 다른 기기가 올려둔 메모를 받아오고, 병합 결과를 다시 서버에 반영함
 async function manualSync() {

@@ -3,7 +3,7 @@
 // Service Worker의 기본 제어 범위(scope)는 자신이 위치한 폴더 이하로 한정되므로,
 // js/sw.js에 두면 /js/ 아래만 제어되어 index.html 등을 캐싱할 수 없음.
 
-const CACHE_NAME = 'kmemo-cache-v1';
+const CACHE_NAME = 'kmemo-cache-v2';
 
 const PRECACHE_URLS = [
   'index.html',
@@ -16,9 +16,17 @@ const PRECACHE_URLS = [
   'img/icon-512x512.png'
 ];
 
+// 새 버전은 설치만 해두고 바로 활성화하지 않음(자동 skipWaiting 호출 안 함).
+// 사용자가 업데이트를 수락(하루 1번 자동 확인 또는 마이페이지 수동 버튼)하면
+// 클라이언트가 보내는 SKIP_WAITING 메시지를 받은 뒤에만 활성화됨.
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)));
-  self.skipWaiting();
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('activate', (event) => {

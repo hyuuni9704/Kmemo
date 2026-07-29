@@ -131,3 +131,70 @@ $$;
 grant execute on function public.auth_login(text, text) to anon;
 grant execute on function public.get_memos(text, text) to anon;
 grant execute on function public.sync_memos(text, text, jsonb) to anon;
+
+-- ===== 마이페이지: 아이디/비밀번호 변경 (2026-07-29 추가) =====
+-- 화면에는 현재 비밀번호 재입력창을 두지 않지만, 기기에 저장된 로그인 정보로
+-- 매 호출마다 아이디+비밀번호를 재검증하므로 다른 사람이 임의로 계정을 변경할 수는 없음
+
+-- 아이디 변경: 현재 아이디+비밀번호가 일치해야 하고, 새 아이디는 중복될 수 없음
+create or replace function public.change_username(p_username text, p_password text, p_new_username text)
+returns void
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_user_id uuid;
+begin
+  if length(trim(p_new_username)) < 1 then
+    raise exception 'INVALID_USERNAME';
+  end if;
+
+  select id into v_user_id
+  from public.kmemo_users
+  where username = p_username
+    and password_hash = encode(digest(p_password, 'sha256'), 'hex');
+
+  if v_user_id is null then
+    raise exception 'AUTH_FAILED';
+  end if;
+
+  if exists (select 1 from public.kmemo_users where username = p_new_username and id <> v_user_id) then
+    raise exception 'USERNAME_TAKEN';
+  end if;
+
+  update public.kmemo_users set username = p_new_username where id = v_user_id;
+end;
+$$;
+
+-- 비밀번호 변경: 현재 아이디+비밀번호가 일치해야 함
+create or replace function public.change_password(p_username text, p_current_password text, p_new_password text)
+returns void
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_user_id uuid;
+begin
+  if length(p_new_password) < 4 then
+    raise exception 'INVALID_PASSWORD';
+  end if;
+
+  select id into v_user_id
+  from public.kmemo_users
+  where username = p_username
+    and password_hash = encode(digest(p_current_password, 'sha256'), 'hex');
+
+  if v_user_id is null then
+    raise exception 'AUTH_FAILED';
+  end if;
+
+  update public.kmemo_users
+  set password_hash = encode(digest(p_new_password, 'sha256'), 'hex')
+  where id = v_user_id;
+end;
+$$;
+
+grant execute on function public.change_username(text, text, text) to anon;
+grant execute on function public.change_password(text, text, text) to anon;

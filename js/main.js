@@ -27,6 +27,14 @@ function loadData() {
 
   // 이전 버전 데이터 호환: memos 필드가 없으면 추가
   if (!Array.isArray(data.memos)) data.memos = [];
+
+  // 이전 버전 데이터 호환: order 필드(사용자 지정 순서)가 없으면 기존 표시 순서(최신 작성일 우선)를 그대로 유지하도록 채워넣음
+  if (data.memos.some((m) => typeof m.order !== 'number')) {
+    [...data.memos]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .forEach((memo, index) => { memo.order = index; });
+  }
+
   return data;
 }
 
@@ -45,6 +53,8 @@ let editingMemoId = null;
 let formReturnView = 'list';
 // 메인화면(버튼 누르기 전) 통합 미니 달력에서 보고 있는 달
 let calendarViewDate = new Date();
+// 메인화면 미니달력에서 선택된 날짜 (YYYY-MM-DD)
+let mainSelectedDayDateKey = todayKey();
 // 카테고리 대시보드 달력에서 보고 있는 달
 let dashboardCalendarViewDate = new Date();
 // 카테고리 대시보드에서 선택된 날짜 (YYYY-MM-DD)
@@ -76,6 +86,7 @@ function showView(viewName) {
   document.getElementById('view-list').hidden = viewName !== 'list';
   document.getElementById('view-scopelist').hidden = viewName !== 'scopelist';
   document.getElementById('view-search').hidden = viewName !== 'search';
+  document.getElementById('view-mypage').hidden = viewName !== 'mypage';
   document.getElementById('view-form').hidden = viewName !== 'form';
 }
 
@@ -217,6 +228,9 @@ function formatShortDate(dateKey) {
 // ===== 메모 생성 =====
 function createMemo({ title, content, categoryIds, color, scope, date }) {
   const now = new Date().toISOString();
+  const existingOrders = appData.memos.map((m) => m.order ?? 0);
+  const minOrder = existingOrders.length ? Math.min(...existingOrders) : 0;
+
   return {
     id: `memo_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     title,
@@ -226,8 +240,10 @@ function createMemo({ title, content, categoryIds, color, scope, date }) {
     color: color || DEFAULT_MEMO_COLOR,
     isDone: false,
     isWatching: false,
+    doneAt: null,
     reminder: { type: null, dates: [], intervalDays: null },
     scope: scope || 'general',
+    order: minOrder - 1, // 새 메모는 기존 목록 맨 위로 오도록 가장 작은 순서값 부여
     createdAt: now,
     updatedAt: now
   };
@@ -240,14 +256,15 @@ function memoMatchesCategory(memo, categoryId) {
 
 function getGeneralMemosForDay(categoryId, dateKey) {
   return appData.memos
-    .filter((m) => m.scope === 'general' && memoMatchesCategory(m, categoryId) && getEffectiveDateKey(m) === dateKey)
+    .filter((m) => m.scope === 'general' && memoMatchesCategory(m, categoryId) &&
+      (getEffectiveDateKey(m) === dateKey || memoNeedsReminderToday(m, dateKey)))
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
 function getGeneralMemosForCategory(categoryId) {
   return appData.memos
     .filter((m) => m.scope === 'general' && memoMatchesCategory(m, categoryId))
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
 function getMonthlyTodosForCategory(categoryId) {
@@ -306,7 +323,7 @@ function renderDashboardCalendar() {
   getGeneralMemosForCategory(currentListCategoryId).forEach((memo) => {
     const key = getEffectiveDateKey(memo);
     if (!dateColorMap[key]) dateColorMap[key] = [];
-    dateColorMap[key].push(memo.color || DEFAULT_MEMO_COLOR);
+    dateColorMap[key].push({ color: memo.color || DEFAULT_MEMO_COLOR, isReminder: false });
   });
   addReminderDotsForMonth(
     dateColorMap, year, month,
@@ -350,10 +367,14 @@ function renderDashboardCalendar() {
     if (colors && colors.length) {
       const dotsWrap = document.createElement('div');
       dotsWrap.className = 'calendar-day__dots';
-      colors.slice(0, 4).forEach((color) => {
+      colors.slice(0, 4).forEach((entry) => {
         const dot = document.createElement('span');
         dot.className = 'calendar-day__dot';
-        dot.style.backgroundColor = color;
+        dot.style.backgroundColor = entry.color;
+        if (entry.isReminder) {
+          dot.classList.add('calendar-day__dot--reminder');
+          dot.style.setProperty('--dot-ring-color', entry.color);
+        }
         dotsWrap.appendChild(dot);
       });
       cell.appendChild(dotsWrap);
@@ -456,6 +477,7 @@ function createChecklistRow(memo) {
   checkbox.addEventListener('click', (e) => e.stopPropagation());
   checkbox.addEventListener('change', () => {
     memo.isDone = checkbox.checked;
+    memo.doneAt = checkbox.checked ? new Date().toISOString() : null;
     memo.updatedAt = new Date().toISOString();
     saveData();
     renderMonthlyTodoCard();
@@ -518,6 +540,25 @@ function renderScopeList() {
   });
 }
 
+// 일반 메모 목록(전체보기)에서 사용자가 직접 순서를 바꿀 수 있도록, 인접한 메모와 order 값을 맞바꿈
+function moveMemoOrder(memoId, direction) {
+  const list = getGeneralMemosForCategory(currentListCategoryId);
+  const index = list.findIndex((m) => m.id === memoId);
+  if (index === -1) return;
+
+  const neighborIndex = direction === 'up' ? index - 1 : index + 1;
+  if (neighborIndex < 0 || neighborIndex >= list.length) return;
+
+  const current = list[index];
+  const neighbor = list[neighborIndex];
+  const tempOrder = current.order;
+  current.order = neighbor.order;
+  neighbor.order = tempOrder;
+
+  saveData();
+  renderScopeList();
+}
+
 function createMemoCard(memo, returnView = 'scopelist') {
   const card = document.createElement('div');
   card.className = 'memo-card';
@@ -541,6 +582,25 @@ function createMemoCard(memo, returnView = 'scopelist') {
 
   const actions = document.createElement('div');
   actions.className = 'memo-card__actions';
+
+  if (returnView === 'scopelist') {
+    const upBtn = document.createElement('button');
+    upBtn.type = 'button';
+    upBtn.className = 'btn-memo-move';
+    upBtn.textContent = '▲';
+    upBtn.setAttribute('aria-label', '위로 이동');
+    upBtn.addEventListener('click', () => moveMemoOrder(memo.id, 'up'));
+
+    const downBtn = document.createElement('button');
+    downBtn.type = 'button';
+    downBtn.className = 'btn-memo-move';
+    downBtn.textContent = '▼';
+    downBtn.setAttribute('aria-label', '아래로 이동');
+    downBtn.addEventListener('click', () => moveMemoOrder(memo.id, 'down'));
+
+    actions.appendChild(upBtn);
+    actions.appendChild(downBtn);
+  }
 
   const editBtn = document.createElement('button');
   editBtn.type = 'button';
@@ -779,6 +839,7 @@ function saveMemoForm() {
 
   if (editingMemoId) {
     const memo = appData.memos.find((m) => m.id === editingMemoId);
+    const wasDone = memo.isDone;
     memo.title = title;
     memo.content = content;
     memo.categories = categoryIds;
@@ -786,12 +847,15 @@ function saveMemoForm() {
     memo.scope = scope;
     memo.date = date;
     memo.isDone = isDone;
+    if (isDone && !wasDone) memo.doneAt = new Date().toISOString();
+    else if (!isDone) memo.doneAt = null;
     memo.isWatching = isWatching;
     memo.reminder = reminder;
     memo.updatedAt = new Date().toISOString();
   } else {
     const newMemo = createMemo({ title, content, categoryIds, color, scope, date });
     newMemo.isDone = isDone;
+    newMemo.doneAt = isDone ? new Date().toISOString() : null;
     newMemo.isWatching = isWatching;
     newMemo.reminder = reminder;
     appData.memos.push(newMemo);
@@ -844,7 +908,7 @@ function renderMiniCalendar() {
   appData.memos.filter((m) => m.scope === 'general').forEach((memo) => {
     const key = getEffectiveDateKey(memo);
     if (!dateColorMap[key]) dateColorMap[key] = [];
-    dateColorMap[key].push(memo.color || DEFAULT_MEMO_COLOR);
+    dateColorMap[key].push({ color: memo.color || DEFAULT_MEMO_COLOR, isReminder: false });
   });
   addReminderDotsForMonth(dateColorMap, year, month, appData.memos);
 
@@ -868,11 +932,13 @@ function renderMiniCalendar() {
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
-    const cell = document.createElement('div');
-    cell.className = 'calendar-day';
-
     const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = 'calendar-day calendar-day--clickable';
     if (key === todayKey()) cell.classList.add('calendar-day--today');
+    if (key === mainSelectedDayDateKey) cell.classList.add('calendar-day--selected');
 
     const num = document.createElement('span');
     num.className = 'calendar-day__num';
@@ -884,14 +950,23 @@ function renderMiniCalendar() {
     if (colors && colors.length) {
       const dotsWrap = document.createElement('div');
       dotsWrap.className = 'calendar-day__dots';
-      colors.slice(0, 4).forEach((color) => {
+      colors.slice(0, 4).forEach((entry) => {
         const dot = document.createElement('span');
         dot.className = 'calendar-day__dot';
-        dot.style.backgroundColor = color;
+        dot.style.backgroundColor = entry.color;
+        if (entry.isReminder) {
+          dot.classList.add('calendar-day__dot--reminder');
+          dot.style.setProperty('--dot-ring-color', entry.color);
+        }
         dotsWrap.appendChild(dot);
       });
       cell.appendChild(dotsWrap);
     }
+
+    cell.addEventListener('click', () => {
+      mainSelectedDayDateKey = key;
+      renderMiniCalendar();
+    });
 
     grid.appendChild(cell);
   }
@@ -899,14 +974,19 @@ function renderMiniCalendar() {
   renderMainTodayMemoCard();
 }
 
-// 메인화면 미니달력 아래: 오늘 작성된 메모 (전체 카테고리 통합)
+// 메인화면 미니달력 아래: 선택된 날짜에 작성된 메모 (전체 카테고리 통합, 기본값은 오늘)
 function renderMainTodayMemoCard() {
-  const memos = getGeneralMemosForDay('common', todayKey());
+  document.getElementById('mainTodayMemoTitle').textContent = formatDayLabel(mainSelectedDayDateKey);
+
+  const memos = getGeneralMemosForDay('common', mainSelectedDayDateKey);
   const container = document.getElementById('mainTodayMemoList');
   container.innerHTML = '';
 
   if (memos.length === 0) {
-    container.appendChild(createEmptyMessage('오늘 작성된 메모가 없습니다.'));
+    const message = mainSelectedDayDateKey === todayKey()
+      ? '오늘 작성된 메모가 없습니다.'
+      : '해당 날짜에 작성된 메모가 없습니다.';
+    container.appendChild(createEmptyMessage(message));
     return;
   }
 
@@ -990,6 +1070,77 @@ function openSearchView() {
   document.getElementById('searchInput').focus();
 }
 
+// ===== 마이페이지 =====
+function bindMypageButton() {
+  document.getElementById('mypageBtn').hidden = false;
+  document.getElementById('mypageBtn').addEventListener('click', openMypageView);
+}
+
+function openMypageView() {
+  showView('mypage');
+  document.getElementById('newUsernameInput').value = '';
+  document.getElementById('newPasswordInput').value = '';
+  document.getElementById('newPasswordConfirmInput').value = '';
+  [document.getElementById('updateStatusMsg'), document.getElementById('usernameChangeMsg'), document.getElementById('passwordChangeMsg')]
+    .forEach((el) => { el.hidden = true; el.textContent = ''; });
+}
+
+function showMypageMessage(elementId, message) {
+  const el = document.getElementById(elementId);
+  el.textContent = message;
+  el.hidden = false;
+}
+
+async function handleChangeUsernameClick() {
+  const newUsername = document.getElementById('newUsernameInput').value.trim();
+  if (!newUsername) {
+    showMypageMessage('usernameChangeMsg', '새 아이디를 입력해주세요.');
+    return;
+  }
+
+  const btn = document.getElementById('changeUsernameBtn');
+  btn.disabled = true;
+  try {
+    await changeUsername(newUsername);
+    showMypageMessage('usernameChangeMsg', '아이디가 변경되었습니다.');
+    document.getElementById('newUsernameInput').value = '';
+  } catch (err) {
+    if (err.message === 'USERNAME_TAKEN') showMypageMessage('usernameChangeMsg', '이미 사용 중인 아이디입니다.');
+    else if (err.message === 'NO_SESSION') showMypageMessage('usernameChangeMsg', '로그인이 필요합니다.');
+    else showMypageMessage('usernameChangeMsg', '인터넷 연결을 확인한 뒤 다시 시도해주세요.');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function handleChangePasswordClick() {
+  const newPassword = document.getElementById('newPasswordInput').value;
+  const confirmPassword = document.getElementById('newPasswordConfirmInput').value;
+
+  if (newPassword.length < 4) {
+    showMypageMessage('passwordChangeMsg', '비밀번호는 4자 이상 입력해주세요.');
+    return;
+  }
+  if (newPassword !== confirmPassword) {
+    showMypageMessage('passwordChangeMsg', '비밀번호 확인이 일치하지 않습니다.');
+    return;
+  }
+
+  const btn = document.getElementById('changePasswordBtn');
+  btn.disabled = true;
+  try {
+    await changePassword(newPassword);
+    showMypageMessage('passwordChangeMsg', '비밀번호가 변경되었습니다.');
+    document.getElementById('newPasswordInput').value = '';
+    document.getElementById('newPasswordConfirmInput').value = '';
+  } catch (err) {
+    if (err.message === 'NO_SESSION') showMypageMessage('passwordChangeMsg', '로그인이 필요합니다.');
+    else showMypageMessage('passwordChangeMsg', '인터넷 연결을 확인한 뒤 다시 시도해주세요.');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 // 메모 제목/내용 기준, 전체 카테고리 통합 검색 (대소문자 구분 없음)
 function searchMemos(query) {
   const q = query.trim().toLowerCase();
@@ -1047,6 +1198,7 @@ async function handleManualSyncClick() {
 function startMainApp() {
   bindLogoutButton();
   bindSearchButton();
+  bindMypageButton();
   initMainApp();
   syncOnLoad();
 }
@@ -1056,6 +1208,7 @@ function startMainApp() {
 async function startMainAppAfterLogin() {
   bindLogoutButton();
   bindSearchButton();
+  bindMypageButton();
   await syncOnLoad();
   initMainApp();
 }
@@ -1087,6 +1240,11 @@ function memoNeedsReminderToday(memo, todayKeyValue) {
   const reminder = memo.reminder;
   if (!reminder || !reminder.type) return false;
 
+  // 완료 처리된 메모는 완료된 날짜 이후로는 알람이 다시 뜨지 않도록 함
+  if (memo.isDone && memo.doneAt && todayKeyValue > getDateKey(memo.doneAt)) {
+    return false;
+  }
+
   if (reminder.type === 'dates') {
     return Array.isArray(reminder.dates) && reminder.dates.includes(todayKeyValue);
   }
@@ -1110,7 +1268,7 @@ function addReminderDotsForMonth(dateColorMap, year, month, memos) {
     memos.forEach((memo) => {
       if (!memoNeedsReminderToday(memo, key)) return;
       if (!dateColorMap[key]) dateColorMap[key] = [];
-      dateColorMap[key].push(memo.color || DEFAULT_MEMO_COLOR);
+      dateColorMap[key].push({ color: memo.color || DEFAULT_MEMO_COLOR, isReminder: true });
     });
   }
 }
@@ -1190,6 +1348,14 @@ function initMainApp() {
   });
   document.getElementById('searchInput').addEventListener('input', renderSearchResults);
 
+  document.getElementById('mypageBackBtn').addEventListener('click', () => {
+    showView('main');
+    renderMiniCalendar();
+  });
+  document.getElementById('checkUpdateBtn').addEventListener('click', handleCheckUpdateClick);
+  document.getElementById('changeUsernameBtn').addEventListener('click', handleChangeUsernameClick);
+  document.getElementById('changePasswordBtn').addEventListener('click', handleChangePasswordClick);
+
   document.querySelectorAll('input[name="memoScope"]').forEach((radio) => {
     radio.addEventListener('change', () => updateStatusFieldVisibility(getSelectedScope()));
   });
@@ -1221,9 +1387,102 @@ function init() {
 
 document.addEventListener('DOMContentLoaded', init);
 
-// ===== 오프라인 지원 (Service Worker 등록) =====
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+// ===== 오프라인 지원 (Service Worker 등록) + 앱 업데이트 감지/적용 =====
+// 새 버전은 곧바로 적용되지 않고 "대기(waiting)" 상태로 대기함(sw.js에서 skipWaiting을 자동 호출하지 않음).
+// 하루 1번 자동으로 물어보거나, 마이페이지의 "지금 업데이트 확인" 버튼으로 언제든 수동 적용 가능.
+// 어느 경로든 메모 데이터(localStorage)는 캐시와 완전히 분리되어 있어 그대로 보존됨.
+const UPDATE_PROMPT_KEY = 'kmemo_update_last_prompt';
+let swRegistration = null;
+let manualUpdateCheckActive = false;
+
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('sw.js');
+      swRegistration = registration;
+
+      // 등록 시점에 이미 새 버전이 설치되어 대기 중인 경우
+      if (registration.waiting && navigator.serviceWorker.controller) {
+        onNewVersionReady();
+      }
+
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (!newWorker) return;
+        newWorker.addEventListener('statechange', () => {
+          // controller가 있어야(=이전에 이미 설치된 버전이 있어야) "업데이트"로 취급
+          // (첫 설치는 새로 물어볼 대상이 없으므로 제외)
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            onNewVersionReady();
+          }
+        });
+      });
+    } catch {
+      // 등록 실패해도 오프라인 우선 동작에는 영향 없음
+    }
+  });
+
+  let alreadyReloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (alreadyReloaded) return;
+    alreadyReloaded = true;
+    window.location.reload();
   });
 }
+
+// 새 버전이 활성화 대기 상태가 되었을 때의 공통 진입점
+function onNewVersionReady() {
+  if (manualUpdateCheckActive) {
+    manualUpdateCheckActive = false;
+    showMypageMessage('updateStatusMsg', '새 버전을 적용합니다...');
+    applyPendingUpdate();
+    return;
+  }
+  maybePromptDailyUpdate();
+}
+
+// 하루 1번만 자동으로 업데이트 여부를 확인
+function maybePromptDailyUpdate() {
+  const today = todayKey();
+  if (localStorage.getItem(UPDATE_PROMPT_KEY) === today) return;
+  localStorage.setItem(UPDATE_PROMPT_KEY, today);
+
+  const ok = window.confirm('새 버전이 있습니다. 지금 업데이트하시겠습니까?\n(작성하신 메모는 그대로 안전하게 유지됩니다)');
+  if (ok) applyPendingUpdate();
+}
+
+function applyPendingUpdate() {
+  if (swRegistration && swRegistration.waiting) {
+    swRegistration.waiting.postMessage('SKIP_WAITING');
+  }
+}
+
+// 마이페이지 "지금 업데이트 확인" 버튼: 하루 1회 제한 없이 즉시 새 버전을 확인하고, 있으면 바로 적용
+async function handleCheckUpdateClick() {
+  if (!('serviceWorker' in navigator) || !swRegistration) {
+    showMypageMessage('updateStatusMsg', '이 브라우저에서는 업데이트 확인을 지원하지 않습니다.');
+    return;
+  }
+
+  showMypageMessage('updateStatusMsg', '업데이트를 확인하는 중...');
+  manualUpdateCheckActive = true;
+
+  try {
+    await swRegistration.update();
+  } catch {
+    manualUpdateCheckActive = false;
+    showMypageMessage('updateStatusMsg', '인터넷 연결을 확인한 뒤 다시 시도해주세요.');
+    return;
+  }
+
+  setTimeout(() => {
+    if (manualUpdateCheckActive) {
+      manualUpdateCheckActive = false;
+      showMypageMessage('updateStatusMsg', '이미 최신 버전입니다.');
+    }
+  }, 1500);
+}
+
+registerServiceWorker();

@@ -91,6 +91,18 @@ button {
   color: var(--color-text-secondary);
 }
 
+.btn-mypage {
+  position: absolute;
+  right: 78px;
+  top: var(--spacing-lg);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 4px 10px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
 /* ===== 검색 화면 ===== */
 .search-input {
   padding: var(--spacing-sm);
@@ -99,6 +111,58 @@ button {
   background-color: var(--color-surface);
   color: var(--color-text);
   font-size: 15px;
+}
+
+/* ===== 마이페이지 ===== */
+.mypage-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  margin: 0 var(--spacing-md) var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+}
+
+.mypage-section__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.mypage-text-input {
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-size: 15px;
+}
+
+.btn-mypage-action {
+  padding: var(--spacing-sm);
+  border: none;
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.btn-mypage-action:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.btn-mypage-action:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.mypage-status-msg {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
 }
 
 /* ===== 로그인 화면 ===== */
@@ -384,6 +448,24 @@ main {
   border-color: #e11d48;
 }
 
+/* 전체보기 목록에서 메모 순서를 직접 바꾸는 위/아래 이동 버튼 */
+.btn-memo-move {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0 var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.btn-memo-move:hover,
+.btn-memo-move:focus-visible {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
 
 /* ===== 메모 작성/수정 화면 ===== */
 #memoFormEl {
@@ -651,6 +733,11 @@ main {
   width: 6px;
   height: 6px;
   border-radius: 50%;
+}
+
+/* 알림/주기 조건에 해당하는 날짜의 점: 메모 색상과 같은 색 링(테두리) 표시 */
+.calendar-day__dot--reminder {
+  box-shadow: 0 0 0 1.5px var(--dot-ring-color, currentColor);
 }
 
 /* 대시보드 달력의 클릭 가능한 날짜 셀 (button) */

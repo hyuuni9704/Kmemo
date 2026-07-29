@@ -15,6 +15,7 @@
   <header class="app-header">
     <button class="btn-search" id="searchBtn" type="button" aria-label="검색" hidden>🔍</button>
     <button class="app-title" id="appTitle" type="button" aria-label="앱 이름 변경"></button>
+    <button class="btn-mypage" id="mypageBtn" type="button" aria-label="마이페이지" hidden>⚙</button>
     <button class="btn-logout" id="logoutBtn" type="button" hidden>로그아웃</button>
   </header>
 
@@ -57,7 +58,7 @@
       <!-- 오늘 작성된 메모 (전체 카테고리 통합) -->
       <section class="dashboard-card">
         <div class="dashboard-card__header">
-          <h3 class="dashboard-card__title">오늘의 메모</h3>
+          <h3 class="dashboard-card__title" id="mainTodayMemoTitle">오늘의 메모</h3>
         </div>
         <div class="dashboard-card__list" id="mainTodayMemoList"></div>
       </section>
@@ -129,6 +130,35 @@
 
       <input class="search-input" id="searchInput" type="text" placeholder="메모 제목/내용 검색">
       <div class="memo-list" id="searchResultsContainer"></div>
+    </section>
+
+    <!-- 마이페이지: 앱 업데이트 + 아이디/비밀번호 변경 -->
+    <section class="view" id="view-mypage" hidden>
+      <div class="view-header">
+        <button class="btn-back" id="mypageBackBtn" type="button" aria-label="뒤로가기">←</button>
+        <h2 class="view-title">마이페이지</h2>
+      </div>
+
+      <section class="mypage-section">
+        <h3 class="mypage-section__title">앱 업데이트</h3>
+        <button class="btn-mypage-action" id="checkUpdateBtn" type="button">지금 업데이트 확인</button>
+        <p class="mypage-status-msg" id="updateStatusMsg" hidden></p>
+      </section>
+
+      <section class="mypage-section">
+        <h3 class="mypage-section__title">아이디 변경</h3>
+        <input class="mypage-text-input" id="newUsernameInput" type="text" placeholder="새 아이디" autocomplete="username">
+        <button class="btn-mypage-action" id="changeUsernameBtn" type="button">아이디 변경</button>
+        <p class="mypage-status-msg" id="usernameChangeMsg" hidden></p>
+      </section>
+
+      <section class="mypage-section">
+        <h3 class="mypage-section__title">비밀번호 변경</h3>
+        <input class="mypage-text-input" id="newPasswordInput" type="password" placeholder="새 비밀번호(4자 이상)" autocomplete="new-password">
+        <input class="mypage-text-input" id="newPasswordConfirmInput" type="password" placeholder="새 비밀번호 확인" autocomplete="new-password">
+        <button class="btn-mypage-action" id="changePasswordBtn" type="button">비밀번호 변경</button>
+        <p class="mypage-status-msg" id="passwordChangeMsg" hidden></p>
+      </section>
     </section>
 
     <!-- 메모 작성/수정 화면 -->
