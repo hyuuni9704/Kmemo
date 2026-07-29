@@ -764,18 +764,24 @@ function openMemoForm(memoId, options = {}) {
   showView('form');
 }
 
+// 카테고리는 공통/개인/사업자/추가 사업체 중 하나만 선택 가능(라디오 버튼)
 function renderCategoryCheckboxes(selectedIds) {
   const container = document.getElementById('categoryCheckboxes');
   container.innerHTML = '';
 
-  getAllCategoryOptions().forEach((opt) => {
+  const options = getAllCategoryOptions();
+  // 이전에 선택돼 있던 카테고리(예: 삭제된 추가 사업체)가 더 이상 없으면 첫 번째 옵션(공통)을 기본 선택
+  const selectedId = options.some((opt) => opt.id === selectedIds[0]) ? selectedIds[0] : options[0].id;
+
+  options.forEach((opt) => {
     const label = document.createElement('label');
     label.className = 'category-checkbox';
 
     const input = document.createElement('input');
-    input.type = 'checkbox';
+    input.type = 'radio';
+    input.name = 'memoCategory';
     input.value = opt.id;
-    input.checked = selectedIds.includes(opt.id);
+    input.checked = opt.id === selectedId;
 
     const span = document.createElement('span');
     span.textContent = opt.name;
@@ -787,8 +793,8 @@ function renderCategoryCheckboxes(selectedIds) {
 }
 
 function getCheckedCategoryIds() {
-  return Array.from(document.querySelectorAll('#categoryCheckboxes input[type="checkbox"]:checked'))
-    .map((el) => el.value);
+  const checked = document.querySelector('#categoryCheckboxes input[type="radio"]:checked');
+  return checked ? [checked.value] : [];
 }
 
 function navigateToFormReturnView() {
@@ -809,7 +815,7 @@ function navigateToFormReturnView() {
 }
 
 function saveMemoForm() {
-  const title = document.getElementById('memoTitleInput').value.trim();
+  let title = document.getElementById('memoTitleInput').value.trim();
   const content = document.getElementById('memoContentInput').value.trim();
   const categoryIds = getCheckedCategoryIds();
   const color = document.getElementById('memoColorInput').value;
@@ -829,6 +835,11 @@ function saveMemoForm() {
   if (!title && !content) {
     window.alert('제목이나 내용을 입력해주세요.');
     return;
+  }
+  if (!title) {
+    // 제목을 안 쓴 경우 "메모 N월 N일"로 자동 작성 (지정된 날짜 기준, 없으면 오늘 날짜)
+    const [, m, d] = (date || todayKey()).split('-').map(Number);
+    title = `메모 ${m}월 ${d}일`;
   }
   if (categoryIds.length === 0) {
     window.alert('카테고리를 하나 이상 선택해주세요.');
