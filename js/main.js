@@ -296,6 +296,28 @@ function renderDashboard() {
   renderBusinessRequiredCard();
 }
 
+// ===== 토스트 안내 메시지 =====
+let toastHideTimeoutId = null;
+let toastRemoveTimeoutId = null;
+
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+
+  if (toastHideTimeoutId) clearTimeout(toastHideTimeoutId);
+  if (toastRemoveTimeoutId) clearTimeout(toastRemoveTimeoutId);
+
+  toast.textContent = message;
+  toast.hidden = false;
+  void toast.offsetWidth; // 트랜지션이 적용되도록 강제 리플로우
+  toast.classList.add('toast--visible');
+
+  toastHideTimeoutId = setTimeout(() => {
+    toast.classList.remove('toast--visible');
+    toastRemoveTimeoutId = setTimeout(() => { toast.hidden = true; }, 200);
+  }, 1500);
+}
+
 function createEmptyMessage(text) {
   const p = document.createElement('p');
   p.className = 'empty-message';
@@ -875,20 +897,12 @@ function saveMemoForm() {
   saveData();
   renderMiniCalendar();
 
-  if (isNewMemo) {
-    // 저장 후 같은 화면에서 바로 다음 메모를 이어서 작성할 수 있도록 입력칸만 비움
-    document.getElementById('memoTitleInput').value = '';
-    document.getElementById('memoContentInput').value = '';
-    document.getElementById('memoDoneInput').checked = false;
-    document.getElementById('memoWatchingInput').checked = false;
-    setReminderRadio('none');
-    updateReminderFieldVisibility('none');
-    renderReminderDatesList([]);
-    document.getElementById('reminderIntervalInput').value = '';
-    document.getElementById('memoTitleInput').focus();
-  } else {
-    navigateToFormReturnView();
-  }
+  const savedLocationLabel = scope === 'business-required'
+    ? SCOPE_LABELS[scope]
+    : `${getCategoryName(categoryIds[0])} · ${SCOPE_LABELS[scope]}`;
+  showToast(`${savedLocationLabel}에 ${isNewMemo ? '저장' : '수정'}되었습니다.`);
+
+  navigateToFormReturnView();
 }
 
 function deleteMemoFromForm() {
