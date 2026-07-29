@@ -744,6 +744,14 @@ main {
   box-shadow: 0 0 0 1.5px var(--dot-ring-color, currentColor);
 }
 
+/* N일 주기(interval) 알림은 링 2개로 구분 표시. 전체 크기는 링 1개짜리와 동일(1.5px)하게 맞춤 */
+.calendar-day__dot--reminder-interval {
+  box-shadow:
+    0 0 0 0.5px var(--dot-ring-color, currentColor),
+    0 0 0 1px var(--color-surface),
+    0 0 0 1.5px var(--dot-ring-color, currentColor);
+}
+
 /* 대시보드 달력의 클릭 가능한 날짜 셀 (button) */
 .calendar-day--clickable {
   border: 1px solid transparent;
