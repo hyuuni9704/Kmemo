@@ -1291,6 +1291,9 @@ function addReminderDotsForMonth(dateColorMap, year, month, memos) {
     const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
     memos.forEach((memo) => {
+      // 메모 자신의 날짜(작성일/지정일)와 같은 날이면 이미 그 날짜의 점으로 표시되므로,
+      // 알림 조건이 우연히 같은 날과 겹치더라도 중복으로 점을 추가하지 않음
+      if (getEffectiveDateKey(memo) === key) return;
       if (!memoNeedsReminderToday(memo, key)) return;
       if (!dateColorMap[key]) dateColorMap[key] = [];
       dateColorMap[key].push({ color: memo.color || DEFAULT_MEMO_COLOR, isReminder: true });
