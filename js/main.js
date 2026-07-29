@@ -1275,7 +1275,9 @@ function memoNeedsReminderToday(memo, todayKeyValue) {
   if (reminder.type === 'interval' && reminder.intervalDays > 0) {
     const startKey = getDateKey(memo.createdAt);
     const diff = daysBetween(startKey, todayKeyValue);
-    return diff >= 0 && diff % reminder.intervalDays === 0;
+    // 메모를 작성한 당일(diff === 0)은 이미 그 날짜의 메모로 표시되므로 알림 조건에서는 제외하고,
+    // 다음 주기 지정일(diff > 0)부터 알림/링 표시가 적용되도록 함 (같은 날 점이 2개로 겹쳐 보이는 것 방지)
+    return diff > 0 && diff % reminder.intervalDays === 0;
   }
 
   return false;
